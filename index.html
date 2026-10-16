@@ -116,6 +116,18 @@
 
         <div class="pt-3 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">系統管理與支援</div>
 
+        <!-- 附錄：台電詳細電價表 (高壓/特高壓與儲能計價焦點) -->
+        <button onclick="switchView('appendix')" id="nav-appendix" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-xs font-medium text-slate-300 hover:bg-white/5 hover:text-white transition text-left">
+          <i data-lucide="receipt" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span>附錄：台電詳細電價表</span>
+              <span class="px-1.5 py-0.2 text-[9px] bg-emerald-500/20 text-emerald-300 rounded font-semibold">官網PDF</span>
+            </div>
+            <div class="text-[10px] font-normal text-slate-400">電費差・容量費・超約罰則</div>
+          </div>
+        </button>
+
         <button onclick="openSupabaseModal()" id="nav-supabase" class="w-full flex items-center gap-3 px-3 py-2 rounded-sm text-xs font-medium text-slate-300 hover:bg-white/5 hover:text-white transition">
           <i data-lucide="database" class="w-4 h-4 text-slate-400"></i>
           <span>Supabase 雲端資料庫設定</span>
@@ -157,25 +169,30 @@
     <header class="bg-white border-b border-[#D8E0E9] px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
       <div class="flex items-center gap-4">
         <!-- Mobile Menu Switcher -->
-        <div class="md:hidden flex items-center gap-1">
-          <button onclick="switchView('bills')" class="px-2.5 py-1 text-xs font-bold bg-[#051C2C] text-white rounded-sm">電費單</button>
-          <button onclick="switchView('calc')" class="px-2.5 py-1 text-xs font-bold bg-slate-100 text-[#051C2C] rounded-sm">光儲模擬</button>
-          <button onclick="switchView('history')" class="px-2.5 py-1 text-xs font-bold bg-slate-100 text-[#051C2C] rounded-sm">提案庫</button>
+        <div class="md:hidden flex items-center gap-1 flex-wrap">
+          <button onclick="switchView('bills')" class="px-2 py-1 text-xs font-bold bg-[#051C2C] text-white rounded-sm">電費單</button>
+          <button onclick="switchView('calc')" class="px-2 py-1 text-xs font-bold bg-slate-100 text-[#051C2C] rounded-sm">光儲模擬</button>
+          <button onclick="switchView('history')" class="px-2 py-1 text-xs font-bold bg-slate-100 text-[#051C2C] rounded-sm">提案庫</button>
+          <button onclick="switchView('appendix')" class="px-2 py-1 text-xs font-bold bg-emerald-50 text-emerald-800 rounded-sm">電價附錄</button>
         </div>
 
         <!-- Module Switcher Pills -->
         <div class="hidden sm:flex items-center bg-[#F4F6F9] p-1 rounded-sm border border-[#D8E0E9]">
-          <button onclick="switchView('bills')" id="top-tab-bills" class="px-3.5 py-1.5 rounded-sm text-xs font-bold bg-[#051C2C] text-white shadow-sm transition flex items-center gap-1.5">
+          <button onclick="switchView('bills')" id="top-tab-bills" class="px-3 py-1.5 rounded-sm text-xs font-bold bg-[#051C2C] text-white shadow-sm transition flex items-center gap-1.5">
             <i data-lucide="file-text" class="w-3.5 h-3.5 text-[#00A3E0]"></i>
-            MODULE 1：每月電費單自動辨識與資料表
+            MODULE 1：電費單辨識
           </button>
-          <button onclick="switchView('calc')" id="top-tab-calc" class="px-3.5 py-1.5 rounded-sm text-xs font-semibold text-slate-600 hover:text-[#051C2C] transition flex items-center gap-1.5">
+          <button onclick="switchView('calc')" id="top-tab-calc" class="px-3 py-1.5 rounded-sm text-xs font-semibold text-slate-600 hover:text-[#051C2C] transition flex items-center gap-1.5">
             <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-            MODULE 2：15分鐘曲線 ✕ 大光小儲模擬
+            MODULE 2：15分鐘光儲模擬
           </button>
-          <button onclick="switchView('history')" id="top-tab-history" class="px-3.5 py-1.5 rounded-sm text-xs font-semibold text-slate-600 hover:text-[#051C2C] transition flex items-center gap-1.5">
+          <button onclick="switchView('history')" id="top-tab-history" class="px-3 py-1.5 rounded-sm text-xs font-semibold text-slate-600 hover:text-[#051C2C] transition flex items-center gap-1.5">
             <i data-lucide="layers" class="w-3.5 h-3.5"></i>
             MODULE 3：雲端提案庫
+          </button>
+          <button onclick="switchView('appendix')" id="top-tab-appendix" class="px-3 py-1.5 rounded-sm text-xs font-semibold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100 hover:text-[#051C2C] border border-emerald-300 transition flex items-center gap-1.5">
+            <i data-lucide="receipt" class="w-3.5 h-3.5 text-emerald-600"></i>
+            附錄：台電詳細電價表 (光儲焦點)
           </button>
         </div>
 
@@ -1244,6 +1261,401 @@
             <li><strong>步驟三（一鍵歸檔至「業務團隊大光小儲雲端提案庫」）</strong>：點擊「將此客戶完整診斷收入業務團隊大光小儲雲端提案庫」，系統自動將每一位客戶的完整五階段 AI 診斷書、大光自用試算與待補資料清單存入提案庫。</li>
             <li><strong>步驟四（取得 AMI 15 分鐘資料與單線圖，推進大光小儲統包）</strong>：向客戶索取 12 個月 AMI 15 分鐘需量資料、受電單線圖與屋頂面積，帶入 MODULE 2 精算日間光電不逆送容量與二段轉三段式儲能效益！</li>
           </ol>
+        </div>
+      </div>
+
+      <!-- VIEW: APPENDIX (台電詳細電價表與用戶/儲能計價指標) -->
+      <div id="view-appendix" class="hidden space-y-6">
+        <!-- Top Executive Banner -->
+        <div class="bg-[#051C2C] text-white p-6 rounded-sm shadow-md border-b-4 border-[#00A3E0] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-[#00A3E0] text-[#051C2C] uppercase tracking-wider rounded-sm">McKinsey Energy Intelligence • Appendix</span>
+              <span class="text-xs text-slate-300 font-mono">Taipower Detailed Tariff Analysis</span>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight">附錄：台電詳細電價表與工商業用戶／儲能核心計費手冊</h2>
+            <p class="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+              聚焦高壓與特高壓時間電價（二段式／三段式），全面剖析工商業負載客戶與儲能廠商（BESS）最關切的「尖離峰電費差、容量基本費、超約附加費、功率因數及電價調整係數」，提供大光小儲規劃之權威計量標準。
+            </p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+            <a href="https://www.taipower.com.tw/media/xtofy2yw/%E8%A9%B3%E7%B4%B0%E9%9B%BB%E5%83%B9%E8%A1%A8.pdf?mediaDL=true" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 bg-[#00A3E0] hover:bg-white text-[#051C2C] font-bold rounded-sm text-xs transition flex items-center justify-center gap-2 shadow-sm">
+              <i data-lucide="file-text" class="w-4 h-4"></i> 下載台電官方詳細電價表 (PDF)
+            </a>
+            <button onclick="window.print()" class="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-sm text-xs transition flex items-center justify-center gap-1.5 border border-white/20">
+              <i data-lucide="printer" class="w-4 h-4"></i> 列印本附錄
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 大核心計價 Highlight 指標卡 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1: 尖離峰電費差 -->
+          <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] border-t-4 border-t-[#005EB8] shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+              <span>尖離峰電費差 (Arbitrage Spread)</span>
+              <span class="px-1.5 py-0.5 bg-blue-50 text-[#005EB8] text-[10px] rounded font-bold">儲能套利核心</span>
+            </div>
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-3xl font-extrabold text-[#051C2C] font-mono">6.86</span>
+              <span class="text-xs font-bold text-slate-500">元/度 (三段式夏月)</span>
+            </div>
+            <div class="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+              <div class="flex justify-between"><span>三段式夏月夜尖峰 (16-22時)</span><span class="font-bold text-[#051C2C]">9.39 元/度</span></div>
+              <div class="flex justify-between"><span>三段式離峰電價</span><span class="font-bold text-slate-500">2.53 元/度</span></div>
+              <div class="flex justify-between"><span>三段式非夏月尖離峰價差</span><span class="font-bold text-[#005EB8]">4.08 元/度 (6.45 vs 2.37)</span></div>
+              <div class="flex justify-between"><span>二段式夏月尖離峰價差</span><span class="font-bold text-slate-700">4.04 元/度 (6.75 vs 2.71)</span></div>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-tight pt-1">
+              <strong>BESS 價值：</strong> 尖峰電價達離峰 3.7 倍，具備充放電日循環套利（離峰充電、夜尖峰放電）極大化誘因。
+            </p>
+          </div>
+
+          <!-- Card 2: 經常契約基本費 -->
+          <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] border-t-4 border-t-[#051C2C] shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+              <span>經常契約基本容量費 (Capacity Cost)</span>
+              <span class="px-1.5 py-0.5 bg-slate-100 text-slate-700 text-[10px] rounded font-bold">固定電費支出</span>
+            </div>
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-3xl font-extrabold text-[#051C2C] font-mono">223.6</span>
+              <span class="text-xs font-bold text-slate-500">元/kW/月 (高壓夏月)</span>
+            </div>
+            <div class="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+              <div class="flex justify-between"><span>高壓非夏月基本費</span><span class="font-bold text-slate-700">166.90 元/kW/月</span></div>
+              <div class="flex justify-between"><span>特高壓夏月／非夏月</span><span class="font-bold text-slate-700">217.30 / 160.60 元</span></div>
+              <div class="flex justify-between"><span>離峰／週六半尖峰容量費</span><span class="font-bold text-slate-500">僅約 1/5 (33.3~44.7元)</span></div>
+              <div class="flex justify-between"><span>經常契約全年平均</span><span class="font-bold text-[#051C2C]">約 190.5 元/kW/月</span></div>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-tight pt-1">
+              <strong>BESS 價值：</strong> 透過削峰填谷 (Peak Shaving) 降低最高需量 10~20%，每降 100 kW 每年現省約 22.8 萬元基本電費。
+            </p>
+          </div>
+
+          <!-- Card 3: 超約附加費 -->
+          <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] border-t-4 border-t-amber-500 shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+              <span>階梯式超約附加費 (Excess Penalties)</span>
+              <span class="px-1.5 py-0.5 bg-amber-50 text-amber-700 text-[10px] rounded font-bold">高額懲罰風險</span>
+            </div>
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-3xl font-extrabold text-amber-600 font-mono">2x ~ 3x</span>
+              <span class="text-xs font-bold text-slate-500">倍基本電費單價</span>
+            </div>
+            <div class="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+              <div class="flex justify-between"><span>超出契約 10% 以內部分</span><span class="font-bold text-amber-700">加收 2 倍 (夏月 447.2元)</span></div>
+              <div class="flex justify-between"><span>超出契約 10% 以上部分</span><span class="font-bold text-red-600">加收 3 倍 (夏月 670.8元)</span></div>
+              <div class="flex justify-between"><span>離峰／週六需量超約</span><span class="font-bold text-slate-600">按 1/5 費率 2倍/3倍 計</span></div>
+              <div class="flex justify-between"><span>以潤泰 600kW 實測為例</span><span class="font-bold text-red-600">全年白繳 38.5 萬元</span></div>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-tight pt-1">
+              <strong>BESS 價值：</strong> 具備毫秒級需量監控放電功能，當負載觸碰契約上限時瞬時頂替，精準規避 2~3 倍超約罰金。
+            </p>
+          </div>
+
+          <!-- Card 4: 功率因數與調整係數 -->
+          <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] border-t-4 border-t-emerald-600 shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+              <span>功因獎懲與電價調整係數</span>
+              <span class="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] rounded font-bold">實質總額折扣</span>
+            </div>
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-3xl font-extrabold text-emerald-700 font-mono">0.927</span>
+              <span class="text-xs font-bold text-slate-500">行業折扣係數 (-7.3%)</span>
+            </div>
+            <div class="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+              <div class="flex justify-between"><span>功率因數考核基準</span><span class="font-bold text-slate-700">80% 為門檻</span></div>
+              <div class="flex justify-between"><span>每提高 1% (上限 95%)</span><span class="font-bold text-emerald-700">總電費扣減 0.1%</span></div>
+              <div class="flex justify-between"><span>每低於 80% 1%</span><span class="font-bold text-red-600">總電費加收 0.1%</span></div>
+              <div class="flex justify-between"><span>折減計算基礎</span><span class="font-bold text-slate-700">（基本電費＋流動電費）</span></div>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-tight pt-1">
+              <strong>BESS 價值：</strong> 儲能 PCS 可提供四象限無功調節 (VAR)，無縫確保電網功因維持 95% 最優享受滿額 1.5% 扣減。
+            </p>
+          </div>
+        </div>
+
+        <!-- 儲能充放電套利效益互動試算器 -->
+        <div class="bg-white p-6 rounded-sm border border-[#D8E0E9] shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D8E0E9] pb-3">
+            <div>
+              <span class="text-[10px] font-bold text-[#005EB8] uppercase tracking-wider">Interactive BESS ROI Simulator</span>
+              <h3 class="text-base font-bold text-[#051C2C]">工商儲能 (BESS) 尖離峰套利與節費效益速算器</h3>
+            </div>
+            <div class="text-xs text-slate-500">
+              即時依據台電三段式時間電價與電池工況動態估算
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">儲能系統額定容量 (kWh)</label>
+              <input type="number" id="appx-bess-kwh" value="500" step="50" min="50" max="10000" oninput="calcAppendixArbitrage()" class="w-full text-xs font-mono border border-slate-300 rounded-sm px-2.5 py-1.5 focus:border-[#005EB8] focus:outline-none">
+              <span class="text-[10px] text-slate-400">例：500kWh (約 250kW/2h)</span>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">每日循環充放次數</label>
+              <select id="appx-bess-cycles" onchange="calcAppendixArbitrage()" class="w-full text-xs border border-slate-300 rounded-sm px-2.5 py-1.5 focus:border-[#005EB8] focus:outline-none">
+                <option value="1" selected>每日 1 次 (夜尖峰放電)</option>
+                <option value="1.5">每日 1.5 次 (半尖+夜尖)</option>
+                <option value="2">每日 2 次 (雙循環極限)</option>
+              </select>
+              <span class="text-[10px] text-slate-400">標準配置建議 1 次延壽</span>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">系統轉換效率 (RTE %)</label>
+              <input type="number" id="appx-bess-rte" value="88" step="1" min="70" max="98" oninput="calcAppendixArbitrage()" class="w-full text-xs font-mono border border-slate-300 rounded-sm px-2.5 py-1.5 focus:border-[#005EB8] focus:outline-none">
+              <span class="text-[10px] text-slate-400">交流對交流 (AC-AC) 效率</span>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">放電深度 (DoD %)</label>
+              <input type="number" id="appx-bess-dod" value="90" step="1" min="50" max="100" oninput="calcAppendixArbitrage()" class="w-full text-xs font-mono border border-slate-300 rounded-sm px-2.5 py-1.5 focus:border-[#005EB8] focus:outline-none">
+              <span class="text-[10px] text-slate-400">工商業儲能標配 90%</span>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">行業電價調整係數</label>
+              <select id="appx-bess-adj" onchange="calcAppendixArbitrage()" class="w-full text-xs border border-slate-300 rounded-sm px-2.5 py-1.5 focus:border-[#005EB8] focus:outline-none">
+                <option value="0.927" selected>0.927 (衰退行業折減 7.3%)</option>
+                <option value="1.0">1.000 (標準無折減行業)</option>
+                <option value="1.07">1.070 (特定高耗能調增)</option>
+              </select>
+              <span class="text-[10px] text-slate-400">依客戶電費單記載實價</span>
+            </div>
+          </div>
+
+          <!-- 計算結果展示列 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-[#F4F6F9] p-4 rounded-sm border border-[#D8E0E9]">
+            <div class="space-y-1">
+              <span class="text-[11px] text-slate-500 font-semibold">夏月單日套利毛利 (122天)</span>
+              <div class="text-lg font-bold text-[#051C2C] font-mono" id="appx-res-summer-daily">NT$ 2,510</div>
+              <span class="text-[10px] text-slate-500">放電 9.39 vs 充電 2.53 / RTE</span>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[11px] text-slate-500 font-semibold">非夏月單日套利毛利 (243天)</span>
+              <div class="text-lg font-bold text-[#005EB8] font-mono" id="appx-res-nonsummer-daily">NT$ 1,480</div>
+              <span class="text-[10px] text-slate-500">放電 6.45 vs 充電 2.37 / RTE</span>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[11px] text-slate-500 font-semibold">全年單純電能套利總收益</span>
+              <div class="text-xl font-extrabold text-[#051C2C] font-mono" id="appx-res-annual-arbitrage">NT$ 665,860</div>
+              <span class="text-[10px] text-emerald-600 font-semibold">含行業折減係數實收</span>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[11px] text-slate-500 font-semibold">加計契約削峰填谷綜合收益 (估)</span>
+              <div class="text-xl font-extrabold text-emerald-700 font-mono" id="appx-res-total-benefit">NT$ 893,860</div>
+              <span class="text-[10px] text-slate-500">假設降低 100kW 契約基本費</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 表格 A: 高壓供電 (11.4kV / 22.8kV) 二段式 vs 三段式時間電價精算對照表 -->
+        <div class="bg-white p-6 rounded-sm border border-[#D8E0E9] shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-[#D8E0E9] pb-3">
+            <div>
+              <span class="text-[10px] font-bold text-[#005EB8] uppercase tracking-wider">Table A • Tariff Rate Comparison</span>
+              <h3 class="text-base font-bold text-[#051C2C]">高壓供電 (11.4kV / 22.8kV) 二段式 vs 三段式時間電價與 BESS 運作模式對照表</h3>
+            </div>
+            <span class="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 font-mono rounded">以台電現行公告最新費率為準</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#051C2C] text-white">
+                  <th class="p-2.5 font-bold border border-slate-700">費率方案</th>
+                  <th class="p-2.5 font-bold border border-slate-700">時段定義</th>
+                  <th class="p-2.5 font-bold border border-slate-700 text-right">夏月流動電價 (元/度)</th>
+                  <th class="p-2.5 font-bold border border-slate-700 text-right">非夏月流動電價 (元/度)</th>
+                  <th class="p-2.5 font-bold border border-slate-700 text-right">夏月最大價差</th>
+                  <th class="p-2.5 font-bold border border-slate-700">BESS 儲能與大光小儲運營策略</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 text-slate-700">
+                <!-- 2-Tier -->
+                <tr class="hover:bg-slate-50">
+                  <td class="p-2.5 font-bold text-[#051C2C] border border-slate-200" rowspan="2">
+                    二段式時間電價<br>
+                    <span class="text-[10px] font-normal text-slate-500">（高壓供電）</span>
+                  </td>
+                  <td class="p-2.5 border border-slate-200">
+                    <span class="inline-block px-1.5 py-0.5 bg-red-50 text-red-700 font-bold rounded text-[11px]">尖峰時段</span><br>
+                    週一至週五 09:00 ~ 24:00 (15小時)
+                  </td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-bold text-red-600">6.75 元</td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-bold text-red-500">6.09 元</td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-bold text-[#005EB8]" rowspan="2">
+                    4.04 元/度<br>
+                    <span class="text-[10px] text-slate-400 font-normal">(非夏月 3.59元)</span>
+                  </td>
+                  <td class="p-2.5 border border-slate-200 text-[11px] leading-relaxed" rowspan="2">
+                    • <strong>傳統方案</strong>：尖峰長達 15 小時，白天光電自發自用抗削 6.75 元電價。<br>
+                    • <strong>儲能限制</strong>：尖離峰價差 4.04 元較小，且尖峰時間太長，小容量儲能（2小時系統）放電覆蓋率低，儲能回本年限通常 &gt; 8~9 年。
+                  </td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-2.5 border border-slate-200">
+                    <span class="inline-block px-1.5 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded text-[11px]">離峰時段</span><br>
+                    平日 00:00 ~ 09:00 及週六日全天
+                  </td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono text-emerald-700">2.71 元</td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono text-emerald-600">2.50 元</td>
+                </tr>
+
+                <!-- 3-Tier -->
+                <tr class="bg-blue-50/40 hover:bg-blue-50/70">
+                  <td class="p-2.5 font-bold text-[#005EB8] border border-slate-200" rowspan="3">
+                    三段式時間電價<br>
+                    <span class="text-[10px] font-normal text-slate-500">（高壓供電 • 新尖峰）</span>
+                  </td>
+                  <td class="p-2.5 border border-slate-200">
+                    <span class="inline-block px-1.5 py-0.5 bg-red-100 text-red-800 font-bold rounded text-[11px]">夜尖峰時段</span><br>
+                    夏月：週一至五 16:00 ~ 22:00 (6小時)<br>
+                    非夏月：週一至五 15:30 ~ 21:30 (6小時)
+                  </td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-extrabold text-red-600 text-sm">9.39 元</td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-bold text-red-600">6.45 元</td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-extrabold text-[#005EB8] text-sm" rowspan="3">
+                    6.86 元/度<br>
+                    <span class="text-[10px] text-emerald-700 font-bold">高達 3.7 倍價差！</span>
+                  </td>
+                  <td class="p-2.5 border border-slate-200 text-[11px] leading-relaxed" rowspan="3">
+                    • <strong>大光小儲黃金組合</strong>：<br>
+                    1. <strong>白天 (09:00~16:00)</strong>：太陽光電自發自用，完美抗削 4.70 元半尖峰電價。<br>
+                    2. <strong>傍晚至夜間 (16:00~22:00)</strong>：光伏退場後，由 2~4 小時 BESS 儲能電池全額放電，精準痛擊 <strong>9.39 元/度</strong> 超高電價！<br>
+                    3. <strong>深夜 (00:00~09:00)</strong>：由台電 <strong>2.53 元/度</strong> 離峰深谷電力完全回充。<br>
+                    • <strong>財務回報</strong>：單純套利每 kWh 全年可獲利 1,300~1,500 元，儲能回收期大幅縮短至 5~6 年。
+                  </td>
+                </tr>
+                <tr class="bg-blue-50/40 hover:bg-blue-50/70">
+                  <td class="p-2.5 border border-slate-200">
+                    <span class="inline-block px-1.5 py-0.5 bg-amber-50 text-amber-800 font-bold rounded text-[11px]">半尖峰時段</span><br>
+                    夏月：平日 09:00~16:00, 22:00~24:00 (9小時)<br>
+                    非夏月：平日 06:00~15:30, 21:30~24:00 (12小時)
+                  </td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-semibold text-amber-700">4.70 元</td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-semibold text-amber-700">4.60 元</td>
+                </tr>
+                <tr class="bg-blue-50/40 hover:bg-blue-50/70">
+                  <td class="p-2.5 border border-slate-200">
+                    <span class="inline-block px-1.5 py-0.5 bg-emerald-50 text-emerald-800 font-bold rounded text-[11px]">離峰時段</span><br>
+                    平日 00:00 ~ 09:00 及週六日全天 (夏月)<br>
+                    平日 00:00 ~ 06:00 及週日全天 (非夏月)
+                  </td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-bold text-emerald-700">2.53 元</td>
+                  <td class="p-2.5 border border-slate-200 text-right font-mono font-bold text-emerald-700">2.37 元</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 表格 B & 表格 C 並排：特高壓對照 & BESS 獲利四大支柱 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- 表格 B: 特高壓 (69kV / 161kV) vs 高壓容量費對照 -->
+          <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] shadow-sm space-y-3">
+            <div class="border-b border-[#D8E0E9] pb-2">
+              <span class="text-[10px] font-bold text-[#005EB8] uppercase tracking-wider">Table B • Voltage Level Matrix</span>
+              <h3 class="text-sm font-bold text-[#051C2C]">高壓 vs 特高壓基本容量費與度數計價結構比較</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-[#F4F6F9] text-slate-700">
+                    <th class="p-2 border border-slate-200 font-semibold">電壓等級</th>
+                    <th class="p-2 border border-slate-200 font-semibold">經常契約 (夏月/非夏月)</th>
+                    <th class="p-2 border border-slate-200 font-semibold">離峰契約 (夏月/非夏月)</th>
+                    <th class="p-2 border border-slate-200 font-semibold">特點與適用情境</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-slate-600">
+                  <tr>
+                    <td class="p-2 border border-slate-200 font-bold text-[#051C2C]">高壓 (11.4 / 22.8 kV)</td>
+                    <td class="p-2 border border-slate-200 font-mono">223.60 / 166.90 元</td>
+                    <td class="p-2 border border-slate-200 font-mono text-slate-500">44.70 / 33.30 元</td>
+                    <td class="p-2 border border-slate-200 text-[11px]">中型工廠、組裝廠、冷凍冷藏業。約定基本費與度數電費單價較特高壓略高約 3~5%。</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 border border-slate-200 font-bold text-[#005EB8]">特高壓 (69 / 161 kV)</td>
+                    <td class="p-2 border border-slate-200 font-mono">217.30 / 160.60 元</td>
+                    <td class="p-2 border border-slate-200 font-mono text-slate-500">43.40 / 32.10 元</td>
+                    <td class="p-2 border border-slate-200 text-[11px]">大型鋼鐵、石化、晶圓代工廠。需量規模動輒數萬 kW，需自備特高壓變電所，單位容量費略低。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-sm border border-slate-200 space-y-1">
+              <div><strong>週六半尖峰契約：</strong> 夏月 44.70 元 / 非夏月 33.30 元（約為經常契約之 1/5）。</div>
+              <div><strong>超約懲罰計算法則：</strong> 超約量 $\le$ 契約 10% 按 2 倍計收，超過 10% 部分按 3 倍計收；離峰超約按 1/5 單價之 2倍/3倍 計收。</div>
+            </div>
+          </div>
+
+          <!-- 表格 C: BESS 工商儲能獲利四大支柱機制分析 -->
+          <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] shadow-sm space-y-3">
+            <div class="border-b border-[#D8E0E9] pb-2">
+              <span class="text-[10px] font-bold text-[#005EB8] uppercase tracking-wider">Table C • BESS Value Streams</span>
+              <h3 class="text-sm font-bold text-[#051C2C]">用戶端工商儲能 (BESS) 獲利與節費四大支柱機制</h3>
+            </div>
+            <div class="space-y-2.5 text-xs text-slate-600">
+              <div class="p-2.5 bg-blue-50/60 rounded-sm border border-blue-100 flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded-full bg-[#005EB8] text-white flex items-center justify-center shrink-0 font-bold text-[10px]">1</div>
+                <div>
+                  <strong class="text-[#051C2C]">時段電費套利 (Energy Arbitrage)：</strong>
+                  <span class="text-[11px] text-slate-600">利用三段式高達 6.86 元/度之巨大價差，於清晨 00:00~06:00 離峰谷電充電，於 16:00~22:00 夜尖峰放電，實現日日穩定電費套利。</span>
+                </div>
+              </div>
+              <div class="p-2.5 bg-slate-50 rounded-sm border border-slate-200 flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded-full bg-[#051C2C] text-white flex items-center justify-center shrink-0 font-bold text-[10px]">2</div>
+                <div>
+                  <strong class="text-[#051C2C]">契約容量削峰填谷 (Peak Shaving & Penalty Avoidance)：</strong>
+                  <span class="text-[11px] text-slate-600">產線大型機台瞬間啟動或午後高溫負載突增時，儲能以毫秒級反應放電削平負載毛刺，既可調降經常契約省下固定容量費（223.6元/kW），更能規避高達 2~3 倍的超約附加罰款。</span>
+                </div>
+              </div>
+              <div class="p-2.5 bg-slate-50 rounded-sm border border-slate-200 flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center shrink-0 font-bold text-[10px]">3</div>
+                <div>
+                  <strong class="text-[#051C2C]">提升光電自發自用率 (PV Self-Consumption)：</strong>
+                  <span class="text-[11px] text-slate-600">當廠房屋頂光電在正午發電量大於廠內基礎負載時，透過儲能將餘電完全吸收儲存，嚴格防止向台電逆送跳機，待傍晚釋出給產線使用。</span>
+                </div>
+              </div>
+              <div class="p-2.5 bg-slate-50 rounded-sm border border-slate-200 flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded-full bg-emerald-700 text-white flex items-center justify-center shrink-0 font-bold text-[10px]">4</div>
+                <div>
+                  <strong class="text-[#051C2C]">緊急備用電源與虛功補償 (UPS & Power Factor Regulation)：</strong>
+                  <span class="text-[11px] text-slate-600">提供廠區重要關鍵迴路不斷電保護（防壓降跳機），且 PCS 智慧調節無功功率 (VAR)，常態維持 95% 功率因數滿額享受 1.5% 全年電費折減。</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 官方時段劃分與計費細則備忘說明 -->
+        <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] shadow-sm text-xs text-slate-600 space-y-2.5">
+          <h4 class="font-bold text-[#051C2C] flex items-center gap-1.5">
+            <i data-lucide="info" class="w-4 h-4 text-[#005EB8]"></i> 台電時間電價計費週期與特殊時段重要規則指引
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[11px] pt-1">
+            <div class="space-y-1">
+              <strong class="text-[#051C2C]">夏月與非夏月週期：</strong>
+              <p>• 夏月：每年 6 月 1 日至 9 月 30 日（共 4 個月 / 122 天）。</p>
+              <p>• 非夏月：每年 10 月 1 日至翌年 5 月 31 日（共 8 個月 / 243 天）。</p>
+            </div>
+            <div class="space-y-1">
+              <strong class="text-[#051C2C]">週六半尖峰與離峰計算法則：</strong>
+              <p>• 週六全日為半尖峰與離峰時段，不計尖峰電價，基本費率僅為平常之 1/5。</p>
+              <p>• 週日全日為離峰時段，無尖峰與半尖峰需量計費。</p>
+            </div>
+            <div class="space-y-1">
+              <strong class="text-[#051C2C]">超約計費三階段判定：</strong>
+              <p>• 超約度數 $\le$ 契約 10%：超出量 $\times$ 基本費單價 $\times$ 2。</p>
+              <p>• 超約度數 $&gt;$ 契約 10%：[契約 $\times$ 10% $\times$ 2倍] $+$ [(超約量 $-$ 契約 $\times$ 10%) $\times$ 3倍]。</p>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-400 pt-2 border-t border-slate-100 flex items-center justify-between">
+            <span>官方資料源：台灣電力公司最新詳細電價表（高壓及特高壓時間電價章節）</span>
+            <a href="https://www.taipower.com.tw/media/xtofy2yw/%E8%A9%B3%E7%B4%B0%E9%9B%BB%E5%83%B9%E8%A1%A8.pdf?mediaDL=true" target="_blank" rel="noopener noreferrer" class="text-[#005EB8] hover:underline flex items-center gap-1">
+              檢視台電官網原始 PDF 規章文件 <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -3491,7 +3903,7 @@
     // --- VIEW & STEP NAVIGATION ---
     function switchView(viewName) {
       currentView = viewName;
-      ['bills', 'calc', 'history', 'faq', 'tutorial'].forEach(v => {
+      ['bills', 'calc', 'history', 'faq', 'tutorial', 'appendix'].forEach(v => {
         const viewEl = document.getElementById(`view-${v}`);
         const navEl = document.getElementById(`nav-${v}`);
         const topTab = document.getElementById(`top-tab-${v}`);
@@ -3525,8 +3937,64 @@
         }, 50);
       } else if (viewName === 'history') {
         loadProposalsFromCloud();
+      } else if (viewName === 'appendix') {
+        calcAppendixArbitrage();
       }
       lucide.createIcons();
+    }
+
+    function calcAppendixArbitrage() {
+      const kwhEl = document.getElementById('appx-bess-kwh');
+      const cyclesEl = document.getElementById('appx-bess-cycles');
+      const rteEl = document.getElementById('appx-bess-rte');
+      const dodEl = document.getElementById('appx-bess-dod');
+      const adjEl = document.getElementById('appx-bess-adj');
+
+      if (!kwhEl || !cyclesEl || !rteEl || !dodEl || !adjEl) return;
+
+      const kwh = Math.max(10, Number(kwhEl.value) || 500);
+      const cycles = Number(cyclesEl.value) || 1;
+      const rte = Math.min(0.99, Math.max(0.5, (Number(rteEl.value) || 88) / 100));
+      const dod = Math.min(1.0, Math.max(0.5, (Number(dodEl.value) || 90) / 100));
+      const adj = Number(adjEl.value) || 0.927;
+
+      // 每日放電度數 (kWh)
+      const dailyDischargeKwh = kwh * dod * cycles;
+      // 每日充電需求度數 (kWh)
+      const dailyChargeKwh = dailyDischargeKwh / rte;
+
+      // 台電三段式時間電價
+      // 夏月 (6/1 - 9/30, 122天): 夜尖峰 9.39, 離峰 2.53
+      const summerDischargeRev = dailyDischargeKwh * 9.39;
+      const summerChargeCost = dailyChargeKwh * 2.53;
+      const summerDailyGross = Math.round((summerDischargeRev - summerChargeCost) * adj);
+
+      // 非夏月 (10/1 - 翌年5/31, 243天): 夜尖峰 6.45, 離峰 2.37
+      const nonsummerDischargeRev = dailyDischargeKwh * 6.45;
+      const nonsummerChargeCost = dailyChargeKwh * 2.37;
+      const nonsummerDailyGross = Math.round((nonsummerDischargeRev - nonsummerChargeCost) * adj);
+
+      // 全年單純電能套利總額
+      const annualArbitrage = Math.round(summerDailyGross * 122 + nonsummerDailyGross * 243);
+
+      // 削峰填谷契約容量節省 (以儲能額定功率推算，夏月 223.60*4 + 非夏月 166.90*8 = 2229.6 元/kW)
+      const estimatedKwShaved = Math.min(kwh * 0.4, 200);
+      const annualCapacitySaving = Math.round(estimatedKwShaved * (223.60 * 4 + 166.90 * 8) * adj);
+      const totalBenefit = annualArbitrage + annualCapacitySaving;
+
+      const summerDailyEl = document.getElementById('appx-res-summer-daily');
+      const nonsummerDailyEl = document.getElementById('appx-res-nonsummer-daily');
+      const annualArbEl = document.getElementById('appx-res-annual-arbitrage');
+      const totalBenEl = document.getElementById('appx-res-total-benefit');
+
+      if (summerDailyEl) summerDailyEl.innerText = `NT$ ${summerDailyGross.toLocaleString()}`;
+      if (nonsummerDailyEl) nonsummerDailyEl.innerText = `NT$ ${nonsummerDailyGross.toLocaleString()}`;
+      if (annualArbEl) annualArbEl.innerText = `NT$ ${annualArbitrage.toLocaleString()}`;
+      if (totalBenEl) {
+        totalBenEl.innerText = `NT$ ${totalBenefit.toLocaleString()}`;
+        const subNote = totalBenEl.nextElementSibling;
+        if (subNote) subNote.innerText = `加計約 ${Math.round(estimatedKwShaved)}kW 契約削峰容量費`;
+      }
     }
 
     function setStep(step) {
