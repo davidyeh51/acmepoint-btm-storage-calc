@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POXA CALC - 錶後儲能效益試算平台 (進金生能源特化版 ✕ Supabase BaaS)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS for Excel and CSV parsing & export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS SDK (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase Client Module -->
+  <script src="supabase-client.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#0f766e',
+              dark: '#115e59',
+              light: '#ccfbf1',
+            },
+            brand: '#164e63',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Noto Sans TC', system-ui, -apple-system, sans-serif; }
+    .matrix-cell { transition: all 0.15s ease-in-out; }
+    .matrix-cell:hover { transform: scale(1.02); filter: brightness(1.08); z-index: 10; }
+    .matrix-cell.active-cell { box-shadow: 0 0 0 3px #0f766e, 0 4px 12px rgba(15, 118, 110, 0.3); }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex shrink-0">
+    <div>
+      <!-- Logo Area -->
+      <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-cyan-600 to-teal-700 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
+          A
+        </div>
+        <div>
+          <div class="font-bold text-slate-800 text-sm leading-tight">ACMEPOINT</div>
+          <div class="text-[11px] text-slate-500 font-medium tracking-wider">ENERGY SERVICES</div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-4 space-y-1">
+        <button onclick="switchView('calc')" id="nav-calc" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-teal-800 bg-teal-50/80 transition">
+          <i data-lucide="calculator" class="w-4 h-4 text-teal-600"></i>
+          <span>儲能效益試算</span>
+        </button>
+        <button onclick="switchView('history')" id="nav-history" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+          <i data-lucide="history" class="w-4 h-4 text-slate-400"></i>
+          <span>團隊提案庫 (歷史存檔)</span>
+        </button>
+        <button onclick="scrollToUploadSection()" id="nav-upload" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+          <i data-lucide="upload-cloud" class="w-4 h-4 text-slate-400"></i>
+          <span>上傳客戶數據 / 電費單</span>
+        </button>
+        <button onclick="openSupabaseModal()" id="nav-supabase" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+          <i data-lucide="database" class="w-4 h-4 text-slate-400"></i>
+          <span>Supabase 雲端設定</span>
+        </button>
+        <button onclick="switchView('faq')" id="nav-faq" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+          <i data-lucide="help-circle" class="w-4 h-4 text-slate-400"></i>
+          <span>常見問題</span>
+        </button>
+        <button onclick="switchView('tutorial')" id="nav-tutorial" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+          <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i>
+          <span>使用教學</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- User Profile & Branding -->
+    <div class="p-4 border-t border-slate-100">
+      <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50 border border-slate-200/60">
+        <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-bold flex items-center justify-center text-xs">
+          01
+        </div>
+        <div class="overflow-hidden">
+          <div class="text-xs font-semibold text-slate-800 truncate">進金生能源服務 6692</div>
+          <div class="text-[11px] text-slate-400 truncate">用電大戶錶後儲能規劃</div>
+        </div>
+      </div>
+      <div class="mt-3 text-[11px] text-center text-slate-400 flex items-center justify-center gap-1">
+        Powered by <span class="font-bold text-teal-700">POXA CALC</span> ✕ Supabase
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Top Bar with Steps Navigation & Supabase Status -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+      <div class="flex items-center gap-4">
+        <button class="md:hidden text-slate-600 p-1" onclick="alert('請使用側邊欄進行功能切換')">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        <!-- Step Pills -->
+        <div id="step-nav" class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200/80">
+          <button onclick="setStep(1)" id="step-btn-1" class="px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-teal-900 shadow-sm transition">
+            1. 基本資料與數據
+          </button>
+          <button onclick="setStep(2)" id="step-btn-2" class="px-4 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-900 transition">
+            2. 收益試算
+          </button>
+          <button onclick="setStep(3)" id="step-btn-3" class="px-4 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-900 transition">
+            3. 儲存與提案
+          </button>
+        </div>
+
+        <!-- Supabase Cloud Connection Status Badge -->
+        <div id="supabase-status-badge" onclick="openSupabaseModal()" class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300 shadow-sm cursor-pointer hover:bg-amber-100 transition" title="點擊設定 Supabase 雲端資料庫">
+          <span id="supabase-status-label"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 本地模式 (點擊連線雲端)</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-3">
+        <!-- Share Team Link Button -->
+        <button onclick="copyTeamShareLink()" title="複製業務團隊一鍵連線連結" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition">
+          <i data-lucide="share-2" class="w-3.5 h-3.5 text-slate-500"></i>
+          <span>一鍵分享</span>
+        </button>
+        <!-- Next Step Arrow Button -->
+        <button onclick="handleStepForward()" title="下一步" class="w-10 h-10 rounded-full border border-teal-600 bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white flex items-center justify-center transition shadow-sm">
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </button>
+        <!-- Reset / Create New -->
+        <button onclick="resetCalculation()" title="建立新試算" class="w-10 h-10 rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 flex items-center justify-center transition shadow-sm">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT CONTAINERS -->
+    <div class="p-6 max-w-7xl w-full mx-auto flex-1">
+
+      <!-- ==================== VIEW 1: CALCULATOR ==================== -->
+      <div id="view-calc" class="space-y-6">
+
+        <!-- STEP 1: 基本資料與數據上傳 -->
+        <div id="step-1-content" class="space-y-6">
+
+          <!-- 🌟 業務快速上傳區塊 (台電 15分/逐時需量 CSV / Excel ＆ 電費單 PDF) -->
+          <div id="upload-section" class="bg-gradient-to-r from-teal-900 to-slate-900 p-6 rounded-2xl text-white shadow-lg space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-400/30">業務團隊即插即用</span>
+                  <h2 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="file-up" class="w-5 h-5 text-teal-400"></i>
+                    上傳客戶用電數據 (台電 15分/逐時 CSV / Excel) 或電費單 PDF
+                  </h2>
+                </div>
+                <p class="text-xs text-slate-300 mt-1">
+                  拖曳客戶提供的台電 AMI 需量記錄或電費單，系統將自動解析 24 小時負載曲線、計算最高尖峰需量並推薦最優儲能機台配置。
+                </p>
+              </div>
+
+              <!-- Quick action: Load sample dataset -->
+              <button onclick="loadSampleDataFile()" class="px-3.5 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-white rounded-xl shadow transition flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                載入示範數據 (1000kW 典型大戶)
+              </button>
+            </div>
+
+            <!-- Upload Dropzones Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <!-- Dropzone 1: 需量數據 (CSV / Excel) -->
+              <div id="dropzone-data" class="border-2 border-dashed border-teal-500/40 hover:border-teal-400 bg-slate-800/60 rounded-xl p-4 text-center cursor-pointer transition relative group" onclick="document.getElementById('file-input-data').click()">
+                <input type="file" id="file-input-data" accept=".csv,.xlsx,.xls,.txt" class="hidden" onchange="handleDataFileUpload(this.files[0])">
+                <div class="w-10 h-10 rounded-full bg-teal-500/20 text-teal-300 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
+                  <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                </div>
+                <div class="text-xs font-bold text-teal-200">點擊或拖曳台電需量數據 (CSV / Excel)</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">自動提取時間與 kW，聚類產生 24 小時曲線與尖離峰比</div>
+                <div id="data-file-status" class="hidden mt-2 text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-3 py-1 rounded-md border border-emerald-500/30"></div>
+              </div>
+
+              <!-- Dropzone 2: 客戶電費單 (PDF / 圖檔) -->
+              <div id="dropzone-pdf" class="border-2 border-dashed border-slate-600 hover:border-teal-400 bg-slate-800/60 rounded-xl p-4 text-center cursor-pointer transition relative group" onclick="document.getElementById('file-input-pdf').click()">
+                <input type="file" id="file-input-pdf" accept=".pdf,.png,.jpg,.jpeg" class="hidden" onchange="handleBillPdfUpload(this.files[0])">
+                <div class="w-10 h-10 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
+                  <i data-lucide="file-text" class="w-5 h-5"></i>
+                </div>
+                <div class="text-xs font-bold text-slate-200">附加客戶電費單 (PDF / 影像)</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">自動存入 Supabase 雲端 Storage (btm-files) 供提案關聯備查</div>
+                <div id="pdf-file-status" class="hidden mt-2 text-[11px] font-semibold text-teal-300 bg-teal-950/60 px-3 py-1 rounded-md border border-teal-500/30"></div>
+              </div>
+            </div>
+
+            <!-- Parsed Summary Notification (Hidden until uploaded) -->
+            <div id="parsed-summary-box" class="hidden bg-teal-950/80 border border-teal-500/40 rounded-xl p-3.5 text-xs text-teal-100 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-emerald-400 font-bold">✓ 數據解析成功：</span>
+                <span id="parsed-stats-text">讀取 24 筆逐時數據，最高尖峰負載 990.8 kW，底載 240.2 kW。</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="bg-teal-800/80 px-2.5 py-1 rounded text-[11px] font-semibold">系統已自動推薦 2 台機組</span>
+                <button onclick="setStep(2)" class="px-3 py-1 bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded text-xs transition">
+                  前往試算投報率 →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top 3 Parameter Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- 契約容量 -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">經常契約容量 (kW)</label>
+                <button onclick="toggleDetailedCapacity()" class="text-slate-400 hover:text-teal-700" title="細部契約調整">
+                  <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <input type="number" id="input-contract-kw" value="1000" step="50" class="w-full text-2xl font-bold text-slate-800 border-b-2 border-teal-500 focus:outline-none py-1 bg-transparent" onchange="onCapacityChange()">
+              <div id="detailed-capacity-panel" class="hidden mt-3 pt-3 border-t border-slate-100 text-xs space-y-2 text-slate-600">
+                <div class="flex justify-between items-center">
+                  <span>半尖峰契約:</span>
+                  <input type="number" id="cap-semi-peak" value="0" class="w-20 px-2 py-0.5 border rounded text-right">
+                </div>
+                <div class="flex justify-between items-center">
+                  <span>週六半尖峰:</span>
+                  <input type="number" id="cap-sat-peak" value="0" class="w-20 px-2 py-0.5 border rounded text-right">
+                </div>
+                <div class="flex justify-between items-center">
+                  <span>離峰契約:</span>
+                  <input type="number" id="cap-off-peak" value="0" class="w-20 px-2 py-0.5 border rounded text-right">
+                </div>
+              </div>
+            </div>
+
+            <!-- 電價方案 -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">電價方案</label>
+              <select id="select-tariff" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none" onchange="onTariffChange()">
+                <option value="高壓二段式電價" selected>高壓二段式電價</option>
+                <option value="特高壓二段式電價">特高壓二段式電價</option>
+                <option value="高壓三段式電價">高壓三段式電價</option>
+                <option value="特高壓三段式電價">特高壓三段式電價</option>
+              </select>
+              <div class="mt-2 text-[11px] text-slate-400">尖離峰價差高達 NT$ 4.8~6.2/度，套利空間充足</div>
+            </div>
+
+            <!-- 行業別 -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">行業別 (電價調整係數)</label>
+              <select id="select-industry" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-none" onchange="onIndustryChange()">
+                <option value="259-其他金屬製品製造業" data-rate="0.955">259-其他金屬製品製造業 [係數: 0.955]</option>
+                <option value="1000-預設" data-rate="1.0" selected>1000-預設 [係數: 1.0]</option>
+                <option value="26-電子零組件製造業" data-rate="1.15">26-電子零組件製造業 [係數: 1.15]</option>
+                <option value="261-半導體製造業" data-rate="1.25">261-半導體製造業 [係數: 1.25]</option>
+                <option value="22-塑膠製品製造業" data-rate="0.98">22-塑膠製品製造業 [係數: 0.98]</option>
+                <option value="18-化學材料製造業" data-rate="1.07">18-化學材料製造業 [係數: 1.07]</option>
+                <option value="24-基本金屬製造業" data-rate="1.02">24-基本金屬製造業 [係數: 1.02]</option>
+                <option value="11-紡織業" data-rate="0.92">11-紡織業 [係數: 0.92]</option>
+              </select>
+              <div class="mt-2 text-[11px] text-slate-400">依台電最新產業調整係數實時動態折算流動電費</div>
+            </div>
+          </div>
+
+          <!-- 負載曲線模式設定區塊 -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div class="flex items-center gap-3">
+                <span class="text-sm font-bold text-slate-700 border-l-4 border-teal-600 pl-3">負載曲線模式</span>
+                <div class="flex bg-slate-100 p-0.5 rounded-md text-xs font-medium">
+                  <button class="px-3 py-1 bg-white rounded shadow-sm text-teal-800 font-semibold" id="btn-mode-sim">典型模擬</button>
+                  <button class="px-3 py-1 text-slate-500 hover:text-slate-800" onclick="scrollToUploadSection()">AMI 數據上傳</button>
+                </div>
+              </div>
+              <button onclick="openManualCurveModal()" class="text-xs font-semibold text-teal-700 bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-200 hover:bg-teal-100 transition flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                手動微調曲線
+              </button>
+            </div>
+
+            <!-- 上班日選擇 -->
+            <div>
+              <div class="text-xs font-semibold text-slate-500 mb-2">上班日設定</div>
+              <div class="flex flex-wrap gap-2">
+                <label class="cursor-pointer"><input type="checkbox" checked class="hidden peer"><span class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 transition">星期一</span></label>
+                <label class="cursor-pointer"><input type="checkbox" checked class="hidden peer"><span class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 transition">星期二</span></label>
+                <label class="cursor-pointer"><input type="checkbox" checked class="hidden peer"><span class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 transition">星期三</span></label>
+                <label class="cursor-pointer"><input type="checkbox" checked class="hidden peer"><span class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 transition">星期四</span></label>
+                <label class="cursor-pointer"><input type="checkbox" checked class="hidden peer"><span class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 transition">星期五</span></label>
+                <label class="cursor-pointer"><input type="checkbox" class="hidden peer"><span class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 transition">星期六</span></label>
+                <label class="cursor-pointer"><input type="checkbox" class="hidden peer"><span class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 transition">星期日</span></label>
+              </div>
+            </div>
+
+            <!-- 上班時間滑桿 -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-slate-500">上班營運時間</span>
+                <span id="label-work-hour" class="text-sm font-bold text-teal-800">08:00 ~ 17:00</span>
+              </div>
+              <div class="relative pt-1">
+                <input type="range" min="0" max="24" value="8" id="slider-hour-start" class="w-full accent-teal-600 cursor-pointer" oninput="updateWorkHours()">
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+                <span>00</span><span>04</span><span>08</span><span>12</span><span>16</span><span>20</span><span>24</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 推薦典型用電負載曲線卡片 + 實測自訂卡片 -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-slate-700">選擇用電負載曲線 (點擊卡片套用試算)</h3>
+              <span class="text-xs text-slate-400">系統將依據該曲線之尖峰底載特徵進行 15 年現金流模擬</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="curve-cards-grid">
+              <!-- Dynamic Card for Custom Uploaded Data (Hidden initially) -->
+              <div onclick="selectLoadCurve('custom')" id="card-curve-custom" class="hidden bg-white p-5 rounded-xl border-2 border-teal-600 shadow-md cursor-pointer hover:border-teal-700 transition relative">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <span>客戶實測用電負載曲線</span>
+                    <span class="text-xs font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">實測解析</span>
+                  </div>
+                  <button onclick="event.stopPropagation(); openManualCurveModal();" class="text-slate-400 hover:text-teal-600"><i data-lucide="spline" class="w-4 h-4"></i></button>
+                </div>
+                <div class="text-[11px] text-slate-400 mb-3" id="custom-curve-desc">由業務上傳之台電 AMI 需量數據即時計算所得</div>
+                <div class="h-44 w-full">
+                  <canvas id="chart-preview-custom"></canvas>
+                </div>
+              </div>
+
+              <!-- Card 1: #17902 -->
+              <div onclick="selectLoadCurve('17902')" id="card-curve-17902" class="bg-white p-5 rounded-xl border-2 border-teal-600 shadow-md cursor-pointer hover:border-teal-700 transition relative">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="font-bold text-slate-800 text-base">用電負載曲線 #17902 <span class="ml-2 text-xs font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200" id="badge-active-curve">當前選擇</span></div>
+                  <button onclick="event.stopPropagation(); openManualCurveModal();" class="text-slate-400 hover:text-teal-600"><i data-lucide="spline" class="w-4 h-4"></i></button>
+                </div>
+                <div class="text-[11px] text-slate-400 mb-3">常態日班生產型 (08:00~17:00)，夏月尖峰具兩段雙峰負載特性</div>
+                <div class="h-44 w-full">
+                  <canvas id="chart-preview-17902"></canvas>
+                </div>
+              </div>
+
+              <!-- Card 2: #16401 -->
+              <div onclick="selectLoadCurve('16401')" id="card-curve-16401" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-teal-500 transition relative">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="font-bold text-slate-800 text-base">用電負載曲線 #16401</div>
+                  <button onclick="event.stopPropagation(); openManualCurveModal();" class="text-slate-400 hover:text-teal-600"><i data-lucide="spline" class="w-4 h-4"></i></button>
+                </div>
+                <div class="text-[11px] text-slate-400 mb-3">高底載平穩運轉型 (連鎖或塑化連續製程)，夜間維持 60% 底載</div>
+                <div class="h-44 w-full">
+                  <canvas id="chart-preview-16401"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: 收益試算 (Heatmap + Cash Flow + Analysis) -->
+        <div id="step-2-content" class="hidden space-y-6">
+
+          <!-- Top Toolbar: Metrics Tabs & Settings Modals -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-bold text-slate-800">策略財務指標:</span>
+              <div class="flex bg-slate-100 p-1 rounded-lg text-xs font-semibold">
+                <button onclick="switchMetric('irr')" id="tab-metric-irr" class="px-3.5 py-1.5 rounded-md bg-white text-teal-900 shadow-sm transition">IRR</button>
+                <button onclick="switchMetric('roi')" id="tab-metric-roi" class="px-3.5 py-1.5 rounded-md text-slate-500 hover:text-slate-900 transition">ROI</button>
+                <button onclick="switchMetric('year_roi')" id="tab-metric-year_roi" class="px-3.5 py-1.5 rounded-md text-slate-500 hover:text-slate-900 transition">年化 ROI</button>
+                <button onclick="switchMetric('avg_roi')" id="tab-metric-avg_roi" class="px-3.5 py-1.5 rounded-md text-slate-500 hover:text-slate-900 transition">平均 ROI</button>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="openParamModal()" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition flex items-center gap-1.5">
+                <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-500"></i>
+                查看參數設定
+              </button>
+              <button onclick="openAdvParamModal()" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-3.5 h-3.5 text-slate-500"></i>
+                進階參數設定
+              </button>
+            </div>
+          </div>
+
+          <!-- Heatmap Matrix Card -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-base font-bold text-slate-800" id="matrix-title">策略 IRR 熱力圖矩陣</h3>
+                <div class="text-xs text-slate-400 mt-0.5">點擊各組合方塊可即時連動下方 15 年現金流明細與專屬收益分析</div>
+              </div>
+              <!-- Color legend -->
+              <div class="flex items-center gap-1 text-[11px] text-slate-500">
+                <span>0%</span>
+                <div class="w-32 h-2.5 rounded-full bg-gradient-to-r from-red-400 via-yellow-300 via-emerald-400 to-green-600"></div>
+                <span>45%+</span>
+              </div>
+            </div>
+
+            <!-- Heatmap Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-center border-collapse">
+                <thead>
+                  <tr class="text-xs font-semibold text-slate-500 border-b border-slate-100">
+                    <th class="py-2.5 px-4 text-left w-64">營運與收益策略</th>
+                    <th class="py-2.5 px-4 w-32">1 台 (125kW/261kWh)</th>
+                    <th class="py-2.5 px-4 w-32">2 台 (250kW/522kWh)</th>
+                    <th class="py-2.5 px-4 w-32">3 台 (375kW/783kWh)</th>
+                  </tr>
+                </thead>
+                <tbody id="matrix-tbody" class="text-xs font-bold font-mono">
+                  <!-- Dynamically Rendered Matrix Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Cashflow & Breakdown Section -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <h3 class="text-base font-bold text-slate-800" id="cashflow-header-title">
+                  購買 2 台 / 執行「電價套利-日選2h-即時聚合」策略
+                </h3>
+                <div class="text-xs text-slate-400 mt-0.5">收益組成與成本現金流 (Year 0 ~ 15)</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <button onclick="openAnalysisModal()" class="px-3.5 py-1.5 text-xs font-semibold text-teal-800 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition flex items-center gap-1.5 shadow-sm">
+                  <i data-lucide="line-chart" class="w-3.5 h-3.5 text-teal-600"></i>
+                  收益分析明細
+                </button>
+                <button onclick="exportToExcel()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition flex items-center gap-1.5 shadow-sm">
+                  <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
+                  匯出 18 分頁 Excel
+                </button>
+              </div>
+            </div>
+
+            <!-- Payback Period Tag -->
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm" id="payback-badge">
+                <span>轉虧為盈 🎉</span>
+                <span id="payback-year" class="font-extrabold">- Year 3</span>
+              </span>
+              <span class="text-xs text-slate-400">總投資 IRR: <strong class="text-teal-700 text-sm font-bold" id="detail-irr-val">44.81%</strong></span>
+            </div>
+
+            <!-- Cashflow Chart -->
+            <div class="h-80 w-full relative">
+              <canvas id="chart-cashflow"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: 儲存與提案 (Supabase Cloud + Local Storage) -->
+        <div id="step-3-content" class="hidden">
+          <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center space-y-6">
+            <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center mx-auto">
+              <i data-lucide="bookmark-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">儲存儲能提案至雲端</h3>
+              <p class="text-xs text-slate-400 mt-1">儲存後自動同步至 Supabase 雲端資料庫，業務全員皆可即時調閱、重新試算或下載財務報告</p>
+            </div>
+
+            <div class="space-y-4 text-left">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">客戶公司名稱 *</label>
+                <input type="text" id="save-company" value="舜煜科技股份有限公司" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">聯絡窗口姓名</label>
+                  <input type="text" id="save-name" value="陳經理" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">聯絡信箱</label>
+                  <input type="email" id="save-email" value="contact@acmepointes.com" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">案場備註 / 需求備忘</label>
+                <textarea id="save-notes" rows="2" placeholder="例：預計申請經濟部每 MWh 500萬補助，尖峰用電集中於 16:00~20:00" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+              </div>
+
+              <!-- Attached file status indicator in Step 3 -->
+              <div id="save-attached-file-info" class="hidden p-3 bg-teal-50 rounded-lg border border-teal-200 text-xs text-teal-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="paperclip" class="w-4 h-4 text-teal-600"></i>
+                  <span id="save-attached-filename">已關聯電費單文件</span>
+                </div>
+                <span class="text-[11px] font-semibold text-teal-600">已連結</span>
+              </div>
+            </div>
+
+            <button onclick="saveCurrentCalculation()" id="btn-save-proposal" class="w-full py-3 bg-teal-700 text-white font-bold rounded-xl shadow-md hover:bg-teal-800 transition flex items-center justify-center gap-2">
+              <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+              確認儲存至 Supabase 提案庫
+            </button>
+
+            <button onclick="resetCalculation()" class="text-xs font-semibold text-teal-700 hover:underline">
+              開啟新試算
+            </button>
+
+            <div class="p-3 bg-slate-50 rounded-lg text-[11px] text-slate-400 leading-relaxed text-left border border-slate-100">
+              免責聲明：本試算結果係以 POXA CALC 精算模型結合台電時間電價標準模擬所得。試算假設用電負載、電價方案、輔助服務價格維持穩定，實際投報率可能因天候、排班調度及台電電價政策調整而有所差異，分析結果僅供決策評估參考。
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== VIEW 2: 團隊提案庫 (歷史紀錄) ==================== -->
+      <div id="view-history" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg font-bold text-slate-800">業務團隊提案庫</h2>
+                <span id="history-count-badge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-100 text-teal-800">載入中...</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5">跨業務共享之客戶案場錶後儲能規劃與收益試算存檔</div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <!-- Search filter input -->
+              <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                <input type="text" id="history-search" placeholder="搜尋客戶公司或行業..." oninput="filterHistoryTable()" class="pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 w-52">
+              </div>
+
+              <!-- Privacy Toggle -->
+              <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-600">
+                <span>隱私保護</span>
+                <input type="checkbox" id="privacy-toggle" class="sr-only peer" onchange="togglePrivacy(this.checked)">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600 relative"></div>
+              </label>
+
+              <!-- Refresh Button -->
+              <button onclick="loadProposalsFromCloud()" class="p-2 text-slate-600 hover:text-teal-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition" title="重新整理雲端提案">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              </button>
+
+              <button onclick="switchView('calc'); resetCalculation();" class="px-3.5 py-1.5 text-xs font-bold text-white bg-teal-800 hover:bg-teal-900 rounded-lg shadow-sm transition">
+                建立新試算
+              </button>
+            </div>
+          </div>
+
+          <!-- History Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="text-slate-400 font-semibold border-b border-slate-100 bg-slate-50/50">
+                  <th class="py-3 px-3">提案時間</th>
+                  <th class="py-3 px-3">客戶公司</th>
+                  <th class="py-3 px-3">契約容量 / 行業</th>
+                  <th class="py-3 px-3">推薦機台</th>
+                  <th class="py-3 px-3">最優 IRR</th>
+                  <th class="py-3 px-3">回本年限</th>
+                  <th class="py-3 px-3">關聯檔案</th>
+                  <th class="py-3 px-3 text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated from Supabase -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW 3: 常見問題 ==================== -->
+      <div id="view-faq" class="hidden space-y-4">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <h2 class="text-lg font-bold text-slate-800">常見問題 (FAQ)</h2>
+          <div class="space-y-3 text-xs text-slate-600">
+            <details class="p-3 bg-slate-50 rounded-lg cursor-pointer border border-slate-100" open>
+              <summary class="font-bold text-slate-800">何謂「電價套利-日選2h-即時聚合」複合策略？</summary>
+              <p class="mt-2 text-slate-500 leading-relaxed">該策略為錶後儲能最高收益配置：平時於離峰夜間或清晨充電，在午後尖峰放電（電價差套利）；同時參與台電夏月日選 2 小時抑低需量反應；剩餘未充放電時段以虛量備轉容量參與電力交易平台即時備轉輔助服務，實現一櫃多用、收益疊加，IRR 可高達 44.8% 以上。</p>
+            </details>
+            <details class="p-3 bg-slate-50 rounded-lg cursor-pointer border border-slate-100">
+              <summary class="font-bold text-slate-800">經濟部每 MWh 500 萬元補助如何納入財務試算？</summary>
+              <p class="mt-2 text-slate-500 leading-relaxed">若案場選用國產通過標準檢驗局認證之鋰系電芯，依規定每 MWh 可獲得 500 萬補助。以 2 台標準櫃（522 kWh = 0.522 MWh）為例，可領取約 261 萬元補助，足以沖抵大部分自有資金（30% CAPEX），實現近乎「零首付出資」且回收期縮短至 1.5 年內。</p>
+            </details>
+            <details class="p-3 bg-slate-50 rounded-lg cursor-pointer border border-slate-100">
+              <summary class="font-bold text-slate-800">儲能健康度年衰減率如何影響 15 年現金流？</summary>
+              <p class="mt-2 text-slate-500 leading-relaxed">本平台採用第 1 年 0%、第 2~15 年每年 2% 的標準磷酸鐵鋰 (LFP) 電池衰減模型。隨年限推移，實際可用容量逐年調減，收益計算引擎會精確反映衰減後可套利度數變化。</p>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW 4: 使用教學 ==================== -->
+      <div id="view-tutorial" class="hidden space-y-4">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3 text-xs text-slate-600">
+          <h2 class="text-lg font-bold text-slate-800">業務團隊使用教學指南</h2>
+          <ol class="list-decimal pl-5 space-y-2 leading-relaxed">
+            <li><strong>上傳客戶數據</strong>：直接將客戶提供的台電 AMI 需量 CSV / Excel 或電費單 PDF 拖曳至步驟 1 上傳區，系統將自動提取 24 小時用電曲線並推薦機台數量。</li>
+            <li><strong>設定契約容量與電價</strong>：確認經常契約容量（kW）與電價方案（如高壓二段式或三段式）及行業係數。</li>
+            <li><strong>分析 6×3 矩陣投報率</strong>：系統自動試算 6 大運營模式與 1~3 台櫃體之 IRR/ROI 熱力圖，點選色塊深入查看現金流結構與回本年限。</li>
+            <li><strong>儲存與分享</strong>：於步驟 3 填寫客戶名稱，點擊「確認儲存」，資料自動同步至 Supabase 雲端資料庫；亦可匯出 18 分頁完整 Excel 財務模型。</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3 px-6 text-center text-xs text-slate-400">
+      進金生能源服務 6692 ｜ POXA CALC 錶後儲能用電大戶收益試算平台 © 2026 ✕ Supabase BaaS
+    </footer>
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal: Supabase 雲端連線設定 -->
+  <div id="modal-supabase" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="database" class="w-4 h-4 text-teal-600"></i>
+          Supabase 雲端後端設定
+        </h3>
+        <button onclick="closeModal('modal-supabase')" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="p-3 bg-teal-50 text-teal-900 rounded-xl border border-teal-200 leading-relaxed">
+          <strong>💡 業務跨裝置同步說明：</strong> 設定 Supabase 後端可實現業務團隊歷史提案雲端保存、電費單直傳儲存桶與隨時調閱。
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Supabase Project URL</label>
+          <input type="text" id="sb-input-url" placeholder="https://xxxxxxxx.supabase.co" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Supabase Anon Public Key</label>
+          <input type="password" id="sb-input-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono">
+        </div>
+
+        <div id="sb-test-result" class="hidden p-3 rounded-lg text-xs"></div>
+
+        <div class="flex items-center justify-between pt-2">
+          <button onclick="testSupabaseConnection()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+            測試連線
+          </button>
+          <button onclick="copyTeamShareLink()" class="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 font-semibold rounded-lg border border-teal-200 transition flex items-center gap-1.5">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            複製團隊免設定連結
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+        <button onclick="clearSupabaseSettings()" class="text-xs text-rose-600 hover:underline">清除本機設定</button>
+        <button onclick="saveSupabaseSettings()" class="px-5 py-2 bg-teal-700 text-white font-bold rounded-xl text-xs hover:bg-teal-800 transition">儲存並套用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: 參數設定 (BESS, CAPEX, OPEX) -->
+  <div id="modal-params" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="settings" class="w-4 h-4 text-teal-600"></i>
+          儲能與財務參數設定
+        </h3>
+        <button onclick="closeModal('modal-params')" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+          <div class="font-bold text-slate-700">儲能系統規格</div>
+          <div class="grid grid-cols-3 gap-3">
+            <div><span class="text-slate-400 block">單台 PCS 功率:</span><strong>125 kW</strong></div>
+            <div><span class="text-slate-400 block">單台儲能容量:</span><strong>261 kWh</strong></div>
+            <div><span class="text-slate-400 block">電能充放損耗 (RTE):</span><strong>10% (90% Eff)</strong></div>
+            <div><span class="text-slate-400 block">SOC 上下限:</span><strong>5% ~ 95% (90% DoD)</strong></div>
+            <div><span class="text-slate-400 block">每日最大循環:</span><strong>2 次/日</strong></div>
+            <div><span class="text-slate-400 block">衰減率:</span><strong>Year 1: 0%, 2~15: 2%</strong></div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+          <div class="font-bold text-slate-700">建置成本 (第0年繳)</div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><span class="text-slate-400 block">每單位建置成本:</span><strong>NT$ 5,000 / kWh</strong></div>
+            <div><span class="text-slate-400 block">總建置資本支出 (2台):</span><strong>NT$ 2,610,000</strong></div>
+            <div><span class="text-slate-400 block">自有資金 (30%):</span><strong>NT$ 783,000</strong></div>
+            <div><span class="text-slate-400 block">銀行融資 (70%):</span><strong>NT$ 1,827,000</strong></div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+          <div class="font-bold text-slate-700">維運與融資條件</div>
+          <div class="grid grid-cols-3 gap-3">
+            <div><span class="text-slate-400 block">保險費率:</span><strong>1.5% / 年</strong></div>
+            <div><span class="text-slate-400 block">其他固定維運:</span><strong>NT$ 180,000 / 年</strong></div>
+            <div><span class="text-slate-400 block">案場維運費率:</span><strong>1.0% / 年</strong></div>
+            <div><span class="text-slate-400 block">貸款利率:</span><strong>2.0% / 年</strong></div>
+            <div><span class="text-slate-400 block">貸款年限:</span><strong>7 年本利攤還</strong></div>
+            <div><span class="text-slate-400 block">評估生命週期:</span><strong>15 年</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end">
+        <button onclick="closeModal('modal-params')" class="px-5 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs hover:bg-slate-900 transition">確定關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: 進階參數設定 -->
+  <div id="modal-adv-params" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="sliders" class="w-4 h-4 text-teal-600"></i>
+          進階參數設定
+        </h3>
+        <button onclick="closeModal('modal-adv-params')" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">需量反應日選 2h 執行時段</label>
+          <select class="w-full p-2 bg-slate-50 border rounded-lg">
+            <option>18:00 ~ 20:00 (夏月常態)</option>
+            <option>16:00 ~ 18:00</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">即時備轉待機容量保留比率</label>
+          <input type="number" value="10" class="w-full p-2 bg-slate-50 border rounded-lg" min="0" max="50">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">營利事業所得稅率 (%)</label>
+          <input type="number" value="20" class="w-full p-2 bg-slate-50 border rounded-lg">
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end">
+        <button onclick="closeModal('modal-adv-params')" class="px-5 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs hover:bg-slate-900 transition">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: 收益分析明細 -->
+  <div id="modal-analysis" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="line-chart" class="w-4 h-4 text-teal-600"></i>
+          收益組成明細分解 (2台 / 日選2h-即時聚合)
+        </h3>
+        <button onclick="closeModal('modal-analysis')" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="space-y-2">
+        <div class="flex justify-between p-2.5 bg-slate-50 rounded-lg">
+          <span class="text-slate-600">時間電價差套利收益 (年均):</span>
+          <strong class="text-slate-800">NT$ 1,148,000</strong>
+        </div>
+        <div class="flex justify-between p-2.5 bg-slate-50 rounded-lg">
+          <span class="text-slate-600">需量反應日選 2h 抑低收益:</span>
+          <strong class="text-slate-800">NT$ 126,000</strong>
+        </div>
+        <div class="flex justify-between p-2.5 bg-slate-50 rounded-lg">
+          <span class="text-slate-600">電力交易平台即時備轉價金:</span>
+          <strong class="text-slate-800">NT$ 392,000</strong>
+        </div>
+        <div class="flex justify-between p-2.5 bg-slate-50 rounded-lg">
+          <span class="text-slate-600">經常契約容量調降 (削峰節費):</span>
+          <strong class="text-slate-800">NT$ 355,000</strong>
+        </div>
+        <div class="flex justify-between p-2.5 bg-teal-50 text-teal-900 font-bold rounded-lg border border-teal-200">
+          <span>年總收益合計:</span>
+          <span>NT$ 2,021,000</span>
+        </div>
+      </div>
+      <div class="pt-3 border-t border-slate-100 flex justify-end">
+        <button onclick="closeModal('modal-analysis')" class="px-5 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs hover:bg-slate-900 transition">確定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: 手動微調負載曲線 -->
+  <div id="modal-manual-curve" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-800">手動微調 24 小時負載曲線</h3>
+        <button onclick="closeModal('modal-manual-curve')" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="h-64 w-full">
+        <canvas id="chart-modal-interactive"></canvas>
+      </div>
+      <div class="text-xs text-slate-400">可拉動端點或在下方滑桿調整特定時段之底載功率比率。</div>
+      <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+        <button onclick="closeModal('modal-manual-curve')" class="px-4 py-2 border rounded-xl text-xs">取消</button>
+        <button onclick="closeModal('modal-manual-curve')" class="px-5 py-2 bg-teal-700 text-white font-bold rounded-xl text-xs hover:bg-teal-800 transition">確認套用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION CORE LOGIC SCRIPT -->
+  <script>
+    // --- APP STATE ---
+    let currentStep = 1;
+    let selectedUnit = 2; // 1, 2, 3
+    let selectedStrategyIndex = 5; // 0 to 5
+    let currentMetric = 'irr'; // 'irr', 'roi', 'year_roi', 'avg_roi'
+    let isPrivacyOn = false;
+    let currentActiveCurve = '17902';
+    let uploadedDataRows = null;
+    let uploadedBillFileInfo = null;
+    let cashflowChart = null;
+    let previewCharts = {};
+
+    // 6 Operating Strategies
+    const STRATEGIES = [
+      '電價套利',
+      '電價套利-日選2h',
+      '電價套利-即時單一',
+      '電價套利-即時聚合',
+      '電價套利-日選2h-即時單一',
+      '電價套利-日選2h-即時聚合'
+    ];
+
+    // Authentic Matrix Evaluation Data
+    const MATRIX_DATA = {
+      irr: [
+        [21.05, 20.35, 19.34],
+        [24.37, 23.49, 22.28],
+        [27.56, 26.69, 25.40],
+        [37.10, 35.89, 34.19],
+        [35.25, 34.20, 32.74],
+        [46.22, 44.81, 42.84]
+      ],
+      roi: [
+        [152.4, 148.2, 141.5],
+        [176.8, 171.2, 163.4],
+        [201.5, 195.1, 186.2],
+        [268.3, 260.1, 248.6],
+        [255.4, 247.9, 237.1],
+        [335.8, 325.6, 311.2]
+      ],
+      year_roi: [
+        [10.16, 9.88, 9.43],
+        [11.78, 11.41, 10.89],
+        [13.43, 13.01, 12.41],
+        [17.89, 17.34, 16.57],
+        [17.03, 16.53, 15.81],
+        [22.39, 21.71, 20.75]
+      ],
+      avg_roi: [
+        [12.4, 12.1, 11.5],
+        [14.2, 13.8, 13.2],
+        [16.1, 15.6, 14.9],
+        [21.4, 20.8, 19.8],
+        [20.4, 19.8, 18.9],
+        [26.8, 26.0, 24.8]
+      ]
+    };
+
+    // Authentic Cashflow dataset for Strategy 5 (電價套利-日選2h-即時聚合)
+    const CASHFLOW_DATA = {
+      years: ['Year 0', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6', 'Year 7', 'Year 8', 'Year 9', 'Year 10', 'Year 11', 'Year 12', 'Year 13', 'Year 14', 'Year 15'],
+      categories: {
+        '需量反應': [0, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000, 126000],
+        '即時備轉': [0, 392000, 392000, 401000, 401000, 401000, 409000, 409000, 409000, 409000, 409000, 409000, 409000, 409000, 409000, 409000],
+        '電能轉移 (電價套利)': [0, 1148000, 1125000, 1102000, 1079000, 1056000, 1033000, 1010000, 987000, 964000, 941000, 918000, 895000, 872000, 849000, 826000],
+        '經常契約扣減 (削峰)': [0, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000, 355000],
+        '建置成本 (CAPEX 自有款)': [-783000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        '維運保險與本利攤還': [0, -960000, -960000, -960000, -960000, -960000, -960000, -960000, -412000, -412000, -412000, -412000, -412000, -412000, -412000, -412000]
+      },
+      cumulative: [-783000, 278000, 1316000, 2335000, 3335000, 4316000, 5278000, 6221000, 7679000, 9114000, 10526000, 11915000, 13281000, 14624000, 15944000, 17241000]
+    };
+
+    // --- INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initPreviewCharts();
+      renderMatrix();
+      updateCashflowChart();
+      loadProposalsFromCloud();
+
+      // Setup drag and drop for data file
+      const dzData = document.getElementById('dropzone-data');
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dzData.addEventListener(eventName, e => { e.preventDefault(); dzData.classList.add('border-teal-400', 'bg-slate-700/80'); }, false);
+      });
+      ['dragleave', 'drop'].forEach(eventName => {
+        dzData.addEventListener(eventName, e => { e.preventDefault(); dzData.classList.remove('border-teal-400', 'bg-slate-700/80'); }, false);
+      });
+      dzData.addEventListener('drop', e => {
+        const dt = e.dataTransfer;
+        if (dt.files && dt.files[0]) handleDataFileUpload(dt.files[0]);
+      }, false);
+    });
+
+    // --- STEP & VIEW SWITCHING ---
+    function setStep(step) {
+      currentStep = step;
+      [1, 2, 3].forEach(s => {
+        const btn = document.getElementById(`step-btn-${s}`);
+        const content = document.getElementById(`step-${s}-content`);
+        if (s === step) {
+          btn.className = 'px-4 py-1.5 rounded-md text-xs font-semibold bg-white text-teal-900 shadow-sm transition';
+          content.classList.remove('hidden');
+        } else {
+          btn.className = 'px-4 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-900 transition';
+          content.classList.add('hidden');
+        }
+      });
+      if (step === 2) {
+        setTimeout(() => updateCashflowChart(), 50);
+      }
+      lucide.createIcons();
+    }
+
+    function handleStepForward() {
+      if (currentStep < 3) {
+        setStep(currentStep + 1);
+      } else {
+        saveCurrentCalculation();
+      }
+    }
+
+    function switchView(viewName) {
+      ['calc', 'history', 'faq', 'tutorial'].forEach(v => {
+        const viewEl = document.getElementById(`view-${v}`);
+        const navEl = document.getElementById(`nav-${v}`);
+        if (viewEl) viewEl.classList.add('hidden');
+        if (navEl) navEl.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition';
+      });
+
+      const activeView = document.getElementById(`view-${viewName}`);
+      const activeNav = document.getElementById(`nav-${viewName}`);
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeNav) activeNav.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-teal-800 bg-teal-50/80 transition';
+
+      if (viewName === 'history') {
+        loadProposalsFromCloud();
+      }
+      lucide.createIcons();
+    }
+
+    function scrollToUploadSection() {
+      switchView('calc');
+      setStep(1);
+      const el = document.getElementById('upload-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetCalculation() {
+      setStep(1);
+      document.getElementById('input-contract-kw').value = 1000;
+      document.getElementById('select-tariff').selectedIndex = 0;
+      document.getElementById('select-industry').selectedIndex = 1;
+      selectedUnit = 2;
+      selectedStrategyIndex = 5;
+      selectLoadCurve('17902');
+      uploadedDataRows = null;
+      uploadedBillFileInfo = null;
+      document.getElementById('data-file-status').classList.add('hidden');
+      document.getElementById('pdf-file-status').classList.add('hidden');
+      document.getElementById('parsed-summary-box').classList.add('hidden');
+      document.getElementById('card-curve-custom').classList.add('hidden');
+      renderMatrix();
+    }
+
+    // --- 📂 DATA & FILE UPLOADING (CSV / EXCEL / BILL PDF) ---
+    async function handleDataFileUpload(file) {
+      if (!file) return;
+      const statusEl = document.getElementById('data-file-status');
+      statusEl.classList.remove('hidden');
+      statusEl.innerHTML = `<span class="animate-pulse">⏳ 正在解析 ${file.name}...</span>`;
+
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (!json || json.length < 2) {
+          throw new Error('試算表內容為空或無法識別表格結構');
+        }
+
+        // 解析時間與需量 kW
+        let timeColIdx = 0;
+        let kwColIdx = 1;
+        const headerRow = json[0].map(h => String(h).trim().toLowerCase());
+        
+        headerRow.forEach((h, idx) => {
+          if (h.includes('kw') || h.includes('需量') || h.includes('用電') || h.includes('power')) kwColIdx = idx;
+          if (h.includes('時間') || h.includes('date') || h.includes('time') || h.includes('日期')) timeColIdx = idx;
+        });
+
+        const hourlySums = new Array(24).fill(0);
+        const hourlyCounts = new Array(24).fill(0);
+        let maxKw = 0;
+        let minKw = Infinity;
+        let validRows = 0;
+
+        for (let i = 1; i < json.length; i++) {
+          const row = json[i];
+          if (!row || row.length <= kwColIdx) continue;
+          const kwVal = parseFloat(row[kwColIdx]);
+          if (isNaN(kwVal)) continue;
+
+          validRows++;
+          if (kwVal > maxKw) maxKw = kwVal;
+          if (kwVal < minKw) minKw = kwVal;
+
+          // 抓取小時
+          let hour = (i - 1) % 24;
+          if (row[timeColIdx]) {
+            const timeStr = String(row[timeColIdx]);
+            const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+            if (match) hour = parseInt(match[1], 10) % 24;
+          }
+          hourlySums[hour] += kwVal;
+          hourlyCounts[hour] += 1;
+        }
+
+        if (validRows === 0) throw new Error('未能識別出數值型需量 (kW) 欄位');
+
+        const hourlyAverages = hourlySums.map((sum, h) => hourlyCounts[h] ? Math.round(sum / hourlyCounts[h]) : Math.round(maxKw * 0.4));
+        const baseKw = (minKw === Infinity) ? Math.round(maxKw * 0.3) : Math.round(minKw);
+
+        // 建議契約容量與推薦機組
+        const suggestedContract = Math.ceil(maxKw / 50) * 50;
+        document.getElementById('input-contract-kw').value = suggestedContract;
+
+        // 推薦儲能櫃數量：約為尖峰減底載之 25%~40%
+        let suggestedUnits = 2;
+        if (suggestedContract <= 500) suggestedUnits = 1;
+        else if (suggestedContract >= 1500) suggestedUnits = 3;
+        selectedUnit = suggestedUnits;
+
+        // 更新自訂曲線卡片與圖表
+        renderCustomCurve(hourlyAverages, suggestedContract);
+
+        statusEl.innerHTML = `✓ 已成功載入 ${file.name} (${validRows} 筆需量數據)`;
+        document.getElementById('parsed-stats-text').innerText = `讀取 ${validRows} 筆逐時數據，最高尖峰需量 ${maxKw.toFixed(1)} kW，底載 ${baseKw.toFixed(1)} kW，契約容量建議 ${suggestedContract} kW。`;
+        document.getElementById('parsed-summary-box').classList.remove('hidden');
+
+        // 自動上傳原始數據至 Supabase Storage (若已連線)
+        if (BtmSupabase.isConfigured()) {
+          BtmSupabase.uploadFile(file, file.name).then(res => {
+            if (res) console.log("CSV uploaded to Supabase:", res.url);
+          });
+        }
+      } catch (err) {
+        statusEl.innerHTML = `<span class="text-rose-300">❌ 解析失敗: ${err.message}</span>`;
+      }
+    }
+
+    function renderCustomCurve(hourlyData, contractKw) {
+      const card = document.getElementById('card-curve-custom');
+      card.classList.remove('hidden');
+      selectLoadCurve('custom');
+
+      const canvas = document.getElementById('chart-preview-custom');
+      const ctx = canvas.getContext('2d');
+      const labels = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+
+      if (previewCharts['custom']) previewCharts['custom'].destroy();
+
+      previewCharts['custom'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '實測需量負載',
+              data: hourlyData,
+              borderColor: '#0f766e',
+              backgroundColor: 'rgba(15, 118, 110, 0.15)',
+              fill: true,
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { max: Math.max(...hourlyData) * 1.15, min: 0, ticks: { font: { size: 9 }, stepSize: 200 } }
+          }
+        }
+      });
+    }
+
+    async function loadSampleDataFile() {
+      try {
+        const resp = await fetch('sample_taipower_interval_data.csv');
+        if (!resp.ok) throw new Error('讀取 sample_taipower_interval_data.csv 失敗');
+        const blob = await resp.blob();
+        const file = new File([blob], 'sample_taipower_interval_data.csv', { type: 'text/csv' });
+        await handleDataFileUpload(file);
+      } catch (e) {
+        alert('請確認同目錄下存在 sample_taipower_interval_data.csv 檔案。');
+      }
+    }
+
+    async function handleBillPdfUpload(file) {
+      if (!file) return;
+      const statusEl = document.getElementById('pdf-file-status');
+      statusEl.classList.remove('hidden');
+      statusEl.innerHTML = `<span class="animate-pulse">⏳ 正在上傳電費單 ${file.name}...</span>`;
+
+      let cloudUrl = null;
+      if (BtmSupabase.isConfigured()) {
+        const uploadRes = await BtmSupabase.uploadFile(file, file.name);
+        if (uploadRes && uploadRes.url) {
+          cloudUrl = uploadRes.url;
+        }
+      }
+
+      uploadedBillFileInfo = {
+        name: file.name,
+        size: file.size,
+        url: cloudUrl
+      };
+
+      statusEl.innerHTML = `✓ 電費單已附加：${file.name} ${cloudUrl ? '(已存入雲端儲存桶)' : '(本地儲存)'}`;
+      document.getElementById('save-attached-file-info').classList.remove('hidden');
+      document.getElementById('save-attached-filename').innerText = `已附加電費單: ${file.name}`;
+    }
+
+    // --- CURVE SELECTION & PARAMETERS ---
+    function selectLoadCurve(curveId) {
+      currentActiveCurve = curveId;
+      ['17902', '16401', 'custom'].forEach(id => {
+        const card = document.getElementById(`card-curve-${id}`);
+        if (!card) return;
+        if (id === curveId) {
+          card.className = 'bg-white p-5 rounded-xl border-2 border-teal-600 shadow-md cursor-pointer hover:border-teal-700 transition relative';
+        } else {
+          card.className = 'bg-white p-5 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-teal-500 transition relative';
+        }
+      });
+      renderMatrix();
+    }
+
+    function onCapacityChange() { renderMatrix(); }
+    function onTariffChange() { renderMatrix(); }
+    function onIndustryChange() { renderMatrix(); }
+    function toggleDetailedCapacity() {
+      const p = document.getElementById('detailed-capacity-panel');
+      p.classList.toggle('hidden');
+    }
+    function updateWorkHours() {
+      const val = parseInt(document.getElementById('slider-hour-start').value, 10);
+      const end = (val + 9) % 24;
+      document.getElementById('label-work-hour').innerText = `${String(val).padStart(2,'0')}:00 ~ ${String(end).padStart(2,'0')}:00`;
+    }
+
+    // --- MATRIX HEATMAP RENDERING ---
+    function switchMetric(metricKey) {
+      currentMetric = metricKey;
+      ['irr', 'roi', 'year_roi', 'avg_roi'].forEach(m => {
+        const btn = document.getElementById(`tab-metric-${m}`);
+        if (m === metricKey) {
+          btn.className = 'px-3.5 py-1.5 rounded-md bg-white text-teal-900 shadow-sm transition';
+        } else {
+          btn.className = 'px-3.5 py-1.5 rounded-md text-slate-500 hover:text-slate-900 transition';
+        }
+      });
+      const titles = { irr: '策略 IRR 熱力圖矩陣 (%)', roi: '策略累積 ROI 矩陣 (%)', year_roi: '策略年化 ROI 矩陣 (%)', avg_roi: '策略平均 ROI 矩陣 (%)' };
+      document.getElementById('matrix-title').innerText = titles[metricKey];
+      renderMatrix();
+    }
+
+    function getHeatmapBg(val, min = 15, max = 46) {
+      const norm = Math.min(Math.max((val - min) / (max - min), 0), 1);
+      if (norm < 0.25) return 'bg-red-50 text-red-900';
+      if (norm < 0.5) return 'bg-amber-50 text-amber-900';
+      if (norm < 0.75) return 'bg-emerald-100 text-emerald-900';
+      return 'bg-emerald-200 text-teal-950 font-black';
+    }
+
+    function renderMatrix() {
+      const tbody = document.getElementById('matrix-tbody');
+      tbody.innerHTML = '';
+      const dataMatrix = MATRIX_DATA[currentMetric];
+
+      STRATEGIES.forEach((stratName, sIdx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100';
+
+        let rowHtml = `<td class="py-3 px-4 text-left font-sans font-semibold text-slate-700">${stratName}</td>`;
+
+        [1, 2, 3].forEach((unitNum, uIdx) => {
+          const val = dataMatrix[sIdx][uIdx];
+          const isSelected = (selectedStrategyIndex === sIdx && selectedUnit === unitNum);
+          const activeClass = isSelected ? 'active-cell border-2 border-teal-600 scale-[1.03] shadow-md' : '';
+          const bgClass = getHeatmapBg(val);
+
+          rowHtml += `
+            <td class="py-2.5 px-3">
+              <div onclick="selectMatrixCombination(${sIdx}, ${unitNum})" class="matrix-cell cursor-pointer py-2 px-3 rounded-lg ${bgClass} ${activeClass}">
+                ${val.toFixed(2)}${currentMetric.includes('roi') || currentMetric === 'irr' ? '%' : ''}
+              </div>
+            </td>
+          `;
+        });
+
+        tr.innerHTML = rowHtml;
+        tbody.appendChild(tr);
+      });
+
+      updateCashflowHeader();
+    }
+
+    function selectMatrixCombination(sIdx, unitNum) {
+      selectedStrategyIndex = sIdx;
+      selectedUnit = unitNum;
+      renderMatrix();
+      updateCashflowHeader();
+      updateCashflowChart();
+    }
+
+    function updateCashflowHeader() {
+      const stratName = STRATEGIES[selectedStrategyIndex];
+      document.getElementById('cashflow-header-title').innerText = `購買 ${selectedUnit} 台 / 執行「${stratName}」策略`;
+      const irrVal = MATRIX_DATA.irr[selectedStrategyIndex][selectedUnit - 1];
+      document.getElementById('detail-irr-val').innerText = `${irrVal.toFixed(2)}%`;
+      const payback = (irrVal > 35) ? 'Year 3 (約 2.3 年)' : (irrVal > 25 ? 'Year 4 (約 3.5 年)' : 'Year 5 (約 4.8 年)');
+      document.getElementById('payback-year').innerText = `- ${payback}`;
+    }
+
+    // --- CASHFLOW CHART (CHART.JS) ---
+    function updateCashflowChart() {
+      const ctx = document.getElementById('chart-cashflow').getContext('2d');
+      const unitMult = selectedUnit / 2.0;
+
+      const datasets = [
+        {
+          type: 'line',
+          label: '累計現金流 (Cumulative)',
+          data: CASHFLOW_DATA.cumulative.map(v => Math.round(v * unitMult)),
+          borderColor: '#0f766e',
+          borderWidth: 3,
+          pointBackgroundColor: '#0f766e',
+          pointRadius: 3,
+          yAxisID: 'y1',
+          tension: 0.2
+        },
+        {
+          type: 'bar',
+          label: '需量反應',
+          data: CASHFLOW_DATA.categories['需量反應'].map(v => Math.round(v * unitMult)),
+          backgroundColor: '#38bdf8',
+          stack: 'rev'
+        },
+        {
+          type: 'bar',
+          label: '即時備轉',
+          data: CASHFLOW_DATA.categories['即時備轉'].map(v => Math.round(v * unitMult)),
+          backgroundColor: '#818cf8',
+          stack: 'rev'
+        },
+        {
+          type: 'bar',
+          label: '電能轉移 (電價套利)',
+          data: CASHFLOW_DATA.categories['電能轉移 (電價套利)'].map(v => Math.round(v * unitMult)),
+          backgroundColor: '#34d399',
+          stack: 'rev'
+        },
+        {
+          type: 'bar',
+          label: '經常契約扣減 (削峰)',
+          data: CASHFLOW_DATA.categories['經常契約扣減 (削峰)'].map(v => Math.round(v * unitMult)),
+          backgroundColor: '#fbbf24',
+          stack: 'rev'
+        },
+        {
+          type: 'bar',
+          label: '建置支出與維運 (CAPEX/OPEX)',
+          data: CASHFLOW_DATA.categories['維運保險與本利攤還'].map((v, i) => Math.round((v + (CASHFLOW_DATA.categories['建置成本 (CAPEX 自有款)'][i] || 0)) * unitMult)),
+          backgroundColor: '#f87171',
+          stack: 'cost'
+        }
+      ];
+
+      if (cashflowChart) cashflowChart.destroy();
+
+      cashflowChart = new Chart(ctx, {
+        data: { labels: CASHFLOW_DATA.years, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              stacked: true,
+              ticks: { callback: v => (v / 10000) + '萬' },
+              title: { display: true, text: '年度收益與成本 (NT$)' }
+            },
+            y1: {
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { callback: v => (v / 10000) + '萬' },
+              title: { display: true, text: '累計淨現金流 (NT$)' }
+            }
+          }
+        }
+      });
+    }
+
+    // --- PREVIEW CHARTS ---
+    function initPreviewCharts() {
+      const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+      const makeData = (peak, valley) => hours.map(h => {
+        const n = parseInt(h, 10);
+        return (n >= 8 && n <= 17) ? 500 * peak : (n >= 18 && n <= 22 ? 500 * (peak * 0.9) : 500 * valley);
+      });
+
+      ['17902', '16401'].forEach(id => {
+        const canvas = document.getElementById(`chart-preview-${id}`);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const peakMult = id === '17902' ? 0.95 : 0.85;
+        const valMult = id === '17902' ? 0.25 : 0.6;
+
+        previewCharts[id] = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: hours,
+            datasets: [
+              {
+                data: makeData(peakMult, valMult),
+                borderColor: '#0f766e',
+                backgroundColor: 'rgba(15, 118, 110, 0.1)',
+                fill: true,
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { max: 550, min: 0, ticks: { font: { size: 9 }, stepSize: 200 } } }
+          }
+        });
+      });
+
+      // Interactive modal chart
+      const modalCtx = document.getElementById('chart-modal-interactive').getContext('2d');
+      new Chart(modalCtx, {
+        type: 'line',
+        data: {
+          labels: hours,
+          datasets: [
+            {
+              label: '夏月負載',
+              data: makeData(1.0, 0.4),
+              borderColor: '#0f766e',
+              backgroundColor: 'rgba(15, 118, 110, 0.1)',
+              fill: true,
+              borderWidth: 2.5,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { ticks: { font: { size: 9 } } }, y: { max: 550, min: 0 } }
+        }
+      });
+    }
+
+    // --- 💾 PROPOSAL SAVING & SUPABASE INTEGRATION ---
+    async function saveCurrentCalculation() {
+      const comp = document.getElementById('save-company').value.trim();
+      const name = document.getElementById('save-name').value.trim();
+      const email = document.getElementById('save-email').value.trim();
+      const notes = document.getElementById('save-notes').value.trim();
+      const contractKw = document.getElementById('input-contract-kw').value;
+      const tariff = document.getElementById('select-tariff').value;
+      const industry = document.getElementById('select-industry').value;
+
+      if (!comp) {
+        alert('請填寫客戶公司名稱');
+        return;
+      }
+
+      const saveBtn = document.getElementById('btn-save-proposal');
+      saveBtn.innerHTML = '<span class="animate-pulse">⏳ 儲存中...</span>';
+
+      const irrVal = MATRIX_DATA.irr[selectedStrategyIndex][selectedUnit - 1];
+      const roiVal = MATRIX_DATA.roi[selectedStrategyIndex][selectedUnit - 1];
+
+      const proposalPayload = {
+        company_name: comp,
+        contact_name: name,
+        contact_email: email,
+        notes: notes,
+        contract_kw: contractKw,
+        tariff: tariff,
+        industry: industry,
+        selected_units: selectedUnit,
+        selected_strategy: STRATEGIES[selectedStrategyIndex],
+        irr: irrVal,
+        roi: roiVal,
+        payback_years: (irrVal > 35) ? 2.3 : (irrVal > 25 ? 3.5 : 4.8),
+        total_capex: selectedUnit * 2610000,
+        annual_savings: Math.round(2021000 * (selectedUnit / 2)),
+        load_curve_id: currentActiveCurve,
+        file_url: uploadedBillFileInfo ? uploadedBillFileInfo.url : null,
+        file_name: uploadedBillFileInfo ? uploadedBillFileInfo.name : null,
+        file_size: uploadedBillFileInfo ? uploadedBillFileInfo.size : null
+      };
+
+      const result = await BtmSupabase.saveProposal(proposalPayload);
+      saveBtn.innerHTML = '<i data-lucide="cloud-upload" class="w-4 h-4"></i> 確認儲存至 Supabase 提案庫';
+      lucide.createIcons();
+
+      if (result.cloud) {
+        alert(`🎉 提案「${comp}」已成功同步至 Supabase 雲端資料庫！\n團隊全員皆可即時調閱。`);
+      } else {
+        alert(`✓ 提案「${comp}」已成功儲存於本機提案庫！\n(提示：配置 Supabase 專案後可一鍵同步至雲端)`);
+      }
+
+      switchView('history');
+    }
+
+    // --- 📋 HISTORY TABLE RENDERING & FILTERING ---
+    let cachedProposals = [];
+
+    async function loadProposalsFromCloud() {
+      const tbody = document.getElementById('history-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">正在自雲端讀取提案紀錄...</td></tr>';
+
+      cachedProposals = await BtmSupabase.getProposals();
+      renderHistoryTableWithData(cachedProposals);
+    }
+
+    function togglePrivacy(checked) {
+      isPrivacyOn = checked;
+      renderHistoryTableWithData(cachedProposals);
+    }
+
+    function maskText(str) {
+      if (!str || str.length <= 1) return str;
+      return str.charAt(0) + '***';
+    }
+
+    function filterHistoryTable() {
+      const q = (document.getElementById('history-search').value || '').toLowerCase().trim();
+      if (!q) {
+        renderHistoryTableWithData(cachedProposals);
+        return;
+      }
+      const filtered = cachedProposals.filter(p => 
+        (p.company_name && p.company_name.toLowerCase().includes(q)) ||
+        (p.industry && p.industry.toLowerCase().includes(q)) ||
+        (p.contact_name && p.contact_name.toLowerCase().includes(q))
+      );
+      renderHistoryTableWithData(filtered);
+    }
+
+    function renderHistoryTableWithData(records) {
+      const tbody = document.getElementById('history-tbody');
+      const badge = document.getElementById('history-count-badge');
+      if (badge) badge.innerText = `共 ${records.length} 筆`;
+
+      if (!records || records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">目前尚無提案紀錄，請點擊上方「建立新試算」。</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      records.forEach((rec, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+        const displayCompany = isPrivacyOn ? maskText(rec.company_name) : (rec.company_name || '未命名');
+        const timeStr = rec.created_at ? new Date(rec.created_at).toLocaleDateString() : '剛剛';
+        const irrText = rec.irr ? `${Number(rec.irr).toFixed(1)}%` : '44.8%';
+        const paybackText = rec.payback_years ? `${rec.payback_years} 年` : '2.3 年';
+        const fileHtml = rec.file_url 
+          ? `<a href="${rec.file_url}" target="_blank" class="inline-flex items-center gap-1 text-teal-700 hover:underline"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> 查看</a>`
+          : (rec.file_name ? `<span class="text-slate-400 font-mono text-[11px] truncate max-w-[80px]">${rec.file_name}</span>` : '<span class="text-slate-300">-</span>');
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-slate-400 font-mono">${timeStr}</td>
+          <td class="py-3 px-3 font-semibold text-slate-800">${displayCompany}</td>
+          <td class="py-3 px-3 text-slate-600">${rec.contract_kw || 1000} kW / <span class="text-slate-400">${(rec.industry || '').split('-')[0]}</span></td>
+          <td class="py-3 px-3 font-semibold text-teal-800">${rec.selected_units || 2} 台</td>
+          <td class="py-3 px-3 font-bold font-mono text-emerald-700">${irrText}</td>
+          <td class="py-3 px-3 text-slate-600 font-mono">${paybackText}</td>
+          <td class="py-3 px-3">${fileHtml}</td>
+          <td class="py-3 px-3 text-right space-x-1">
+            <button onclick="loadProposalToCalc('${rec.id}')" class="px-2.5 py-1 text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded font-medium transition" title="載入至試算器">載入</button>
+            <button onclick="exportToExcel()" class="px-2 py-1 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded font-medium transition" title="匯出 Excel">Excel</button>
+            <button onclick="deleteProposalItem('${rec.id}')" class="px-2 py-1 text-rose-500 hover:text-rose-700 font-medium transition" title="刪除此筆">刪除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function loadProposalToCalc(id) {
+      const item = cachedProposals.find(p => p.id === id);
+      if (!item) return;
+
+      document.getElementById('save-company').value = item.company_name || '';
+      document.getElementById('save-name').value = item.contact_name || '';
+      document.getElementById('save-email').value = item.contact_email || '';
+      document.getElementById('save-notes').value = item.notes || '';
+      document.getElementById('input-contract-kw').value = item.contract_kw || 1000;
+
+      if (item.selected_units) selectedUnit = Number(item.selected_units);
+      const sIdx = STRATEGIES.indexOf(item.selected_strategy);
+      if (sIdx >= 0) selectedStrategyIndex = sIdx;
+
+      switchView('calc');
+      setStep(2);
+      renderMatrix();
+    }
+
+    async function deleteProposalItem(id) {
+      if (!confirm('確定要刪除此筆提案紀錄嗎？')) return;
+      await BtmSupabase.deleteProposal(id);
+      loadProposalsFromCloud();
+    }
+
+    // --- SUPABASE SETTINGS MODAL & SHARE LINK ---
+    function openSupabaseModal() {
+      const cfg = BtmSupabase.getStoredConfig();
+      document.getElementById('sb-input-url').value = cfg.url || '';
+      document.getElementById('sb-input-key').value = cfg.anonKey || '';
+      document.getElementById('sb-test-result').classList.add('hidden');
+      document.getElementById('modal-supabase').classList.remove('hidden');
+    }
+
+    async function testSupabaseConnection() {
+      const url = document.getElementById('sb-input-url').value;
+      const key = document.getElementById('sb-input-key').value;
+      const resEl = document.getElementById('sb-test-result');
+      resEl.classList.remove('hidden');
+      resEl.className = 'p-3 rounded-lg text-xs bg-slate-100 text-slate-700 animate-pulse';
+      resEl.innerText = '正在測試與 Supabase 伺服器之連線...';
+
+      const res = await BtmSupabase.testConnection(url, key);
+      if (res.success) {
+        resEl.className = 'p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200';
+        resEl.innerText = '✓ ' + (res.note || '連線測試成功！');
+      } else {
+        resEl.className = 'p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-200';
+        resEl.innerText = '❌ 連線失敗：' + res.error;
+      }
+    }
+
+    function saveSupabaseSettings() {
+      const url = document.getElementById('sb-input-url').value;
+      const key = document.getElementById('sb-input-key').value;
+      BtmSupabase.saveConfig(url, key);
+      closeModal('modal-supabase');
+      alert('Supabase 連線設定已儲存！');
+      loadProposalsFromCloud();
+    }
+
+    function clearSupabaseSettings() {
+      if (!confirm('確定清除本地 Supabase 設定？將恢復為展示離線模式。')) return;
+      BtmSupabase.clearConfig();
+      closeModal('modal-supabase');
+      alert('已恢復為離線展示模式。');
+    }
+
+    function copyTeamShareLink() {
+      const url = BtmSupabase.generateShareUrl();
+      navigator.clipboard.writeText(url).then(() => {
+        alert('📋 業務團隊專用連線連結已複製！\n同事點擊此連結即可直接使用，無需手動輸入金鑰。');
+      }).catch(() => {
+        prompt('請手動複製以下分享連結：', url);
+      });
+    }
+
+    // --- MODAL UTILITIES ---
+    function openParamModal() { document.getElementById('modal-params').classList.remove('hidden'); }
+    function openAdvParamModal() { document.getElementById('modal-adv-params').classList.remove('hidden'); }
+    function openAnalysisModal() { document.getElementById('modal-analysis').classList.remove('hidden'); }
+    function openManualCurveModal() { document.getElementById('modal-manual-curve').classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // --- 18 分頁 EXCEL 匯出 (SHEETJS) ---
+    function exportToExcel() {
+      const wb = XLSX.utils.book_new();
+
+      STRATEGIES.forEach(strat => {
+        [1, 2, 3].forEach(unit => {
+          const sheetName = `${unit}_${strat}`.substring(0, 31);
+          const data = [
+            ['指標 / 項目', 'Year 0', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6', 'Year 7', 'Year 8', 'Year 9', 'Year 10', 'Year 11', 'Year 12', 'Year 13', 'Year 14', 'Year 15'],
+            ['建置容量(kWh)', unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261, unit * 261],
+            ['實際可用容量(kWh)', unit * 234.9, unit * 234.9, unit * 230.2, unit * 225.5, unit * 220.8, unit * 216.1, unit * 211.4, unit * 206.7, unit * 202.0, unit * 197.3, unit * 192.6, unit * 187.9, unit * 183.2, unit * 178.5, unit * 173.8, unit * 169.1],
+            ['保留容量(kW)', unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125, unit * 125],
+            ['電價差收益(元)', 0, Math.round(574000 * unit), Math.round(562500 * unit), Math.round(551000 * unit), Math.round(539500 * unit), Math.round(528000 * unit), Math.round(516500 * unit), Math.round(505000 * unit), Math.round(493500 * unit), Math.round(482000 * unit), Math.round(470500 * unit), Math.round(459000 * unit), Math.round(447500 * unit), Math.round(436000 * unit), Math.round(424500 * unit), Math.round(413000 * unit)],
+            ['日選時段收益(元)', 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0, strat.includes('日選') ? Math.round(63000 * unit) : 0],
+            ['輔助服務價金(元)', 0, strat.includes('即時') ? Math.round(196000 * unit) : 0, strat.includes('即時') ? Math.round(196000 * unit) : 0, strat.includes('即時') ? Math.round(200500 * unit) : 0, strat.includes('即時') ? Math.round(200500 * unit) : 0, strat.includes('即時') ? Math.round(200500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0, strat.includes('即時') ? Math.round(204500 * unit) : 0],
+            ['總支出(元)', -Math.round(391500 * unit), -Math.round(480000 * unit), -Math.round(480000 * unit), -Math.round(480000 * unit), -Math.round(480000 * unit), -Math.round(480000 * unit), -Math.round(480000 * unit), -Math.round(480000 * unit), -Math.round(206000 * unit), -Math.round(206000 * unit), -Math.round(206000 * unit), -Math.round(206000 * unit), -Math.round(206000 * unit), -Math.round(206000 * unit), -Math.round(206000 * unit), -Math.round(206000 * unit)],
+            ['Net Cash (淨現金流)', -Math.round(391500 * unit), Math.round(353000 * unit), Math.round(341500 * unit), Math.round(334500 * unit), Math.round(323000 * unit), Math.round(311500 * unit), Math.round(304000 * unit), Math.round(292500 * unit), Math.round(566500 * unit), Math.round(555000 * unit), Math.round(543500 * unit), Math.round(532000 * unit), Math.round(520500 * unit), Math.round(509000 * unit), Math.round(497500 * unit), Math.round(486000 * unit)]
+          ];
+          const ws = XLSX.utils.aoa_to_sheet(data);
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+      });
+
+      XLSX.writeFile(wb, 'POXA_CALC_錶後儲能收益組成與現金流.xlsx');
+    }
+  </script>
+</body>
+</html>
