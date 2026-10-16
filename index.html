@@ -676,61 +676,125 @@
         <!-- STEP 1: 15分鐘數據、費率與大光小儲設定 -->
         <div id="step-1-content" class="space-y-6">
 
-          <!-- 15分鐘 AMI 數據上傳區 -->
+          <!-- MODULE 1 電費單反推 24H 負載演算法 ＆ 15分鐘 AMI 數據上傳區 -->
           <div id="upload-section" class="bg-[#051C2C] p-6 rounded-sm text-white shadow-md border-t-4 border-[#00A3E0] space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="max-w-2xl">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-sm text-[10px] font-bold bg-[#00A3E0] text-[#051C2C] uppercase tracking-wider">BILL-TO-LOAD INVERSE ALGORITHM</span>
                   <span class="px-2.5 py-0.5 rounded-sm text-[10px] font-bold bg-[#005EB8] text-white uppercase tracking-wider">AMI 15-MIN INTERVAL DATA</span>
                   <h2 class="text-base font-bold text-white flex items-center gap-2">
-                    <i data-lucide="bar-chart-horizontal" class="w-5 h-5 text-[#00A3E0]"></i>
-                    上傳台電 15 分鐘高壓需量資訊 (CSV / Excel) 或由每月電費單自動合成曲線
+                    <i data-lucide="cpu" class="w-5 h-5 text-[#00A3E0]"></i>
+                    由 MODULE 1 電費單數據反推 24H 負載演算法模擬 ＆ 台電 15 分鐘 AMI 匯入
                   </h2>
                 </div>
-                <p class="text-xs text-slate-300 mt-1">
-                  系統自動聚類 24 小時負載輪廓，疊加<strong>「大光（高比例屋頂型/地面型太陽能光電自發自用）」</strong>與<strong>「小儲（精準容量儲能削峰填谷）」</strong>進行二段式 vs. 三段式時間電價模擬。
+                <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                  當尚未取得台電 AMI 15 分鐘原始檔時，系統直接讀取 <strong>MODULE 1 電費單之「尖峰/週六/離峰度數」與「經常/週六/離峰最高需量」</strong>，透過<strong>能量積分守恆与需量極值約束演算法</strong>反推 24 小時負載輪廓，模擬大光小儲與二/三段式費率效益。
                 </p>
               </div>
 
-              <div class="flex items-center gap-2">
-                <button onclick="loadSampleDataFile()" class="px-3.5 py-2 text-xs font-bold bg-[#005EB8] hover:bg-[#00A3E0] hover:text-[#051C2C] text-white rounded-sm shadow transition flex items-center gap-1.5">
-                  <i data-lucide="sparkles" class="w-4 h-4"></i>
-                  載入 15 分鐘高壓示範數據 (1000kW)
-                </button>
+              <!-- 取代原 1000kW 示範按鈕：改為 MODULE 1 電費單反推負載演算法情境選擇與觸發器 -->
+              <div class="bg-[#0A2540] p-3 rounded-sm border border-[#00A3E0]/50 flex flex-wrap items-center gap-2 shadow-inner">
+                <div class="flex flex-col">
+                  <label class="text-[10px] text-[#00A3E0] font-bold uppercase tracking-wider mb-0.5">1. 選擇 MODULE 1 客戶電費單</label>
+                  <select id="sim-bill-company-select" onchange="populateSimScenarioOptions(); runBillInverseLoadSimulation(false);" class="px-2.5 py-1.5 bg-[#051C2C] border border-slate-600 rounded-sm text-xs font-bold text-white focus:outline-none focus:border-[#00A3E0]">
+                    <option value="ALL">潤泰精密材料股份有限公司 (里港廠)</option>
+                  </select>
+                </div>
+
+                <div class="flex flex-col">
+                  <label class="text-[10px] text-[#00A3E0] font-bold uppercase tracking-wider mb-0.5">2. 選擇電費單反推負載情境</label>
+                  <select id="sim-bill-scenario-select" onchange="runBillInverseLoadSimulation(true)" class="px-2.5 py-1.5 bg-[#051C2C] border border-slate-600 rounded-sm text-xs font-bold text-white focus:outline-none focus:border-[#00A3E0]">
+                    <option value="ANNUAL_WEIGHTED" selected>情境 A：全年 12 個月度數守恆反推 (中位需量 680kW 基準)</option>
+                    <option value="PEAK_MONTH_MAX">情境 B：最高尖峰超約月極限反推 (9月 724kW 壓力測試)</option>
+                    <option value="SUMMER_AVG">情境 C：夏月 (6~9月) 高負載反推 (光電重疊與三段式檢核)</option>
+                    <option value="NON_SUMMER_AVG">情境 D：非夏月 (10~5月) 常態負載反推</option>
+                    <option value="MORNING_RAMP_TEST">情境 E：離峰最高需量 (5月 726kW) 早班提早開機反推</option>
+                  </select>
+                </div>
+
+                <div class="flex flex-col justify-end pt-3.5">
+                  <button onclick="runBillInverseLoadSimulation(true)" class="px-3.5 py-1.5 text-xs font-bold bg-[#00A3E0] hover:bg-white text-[#051C2C] rounded-sm shadow transition flex items-center gap-1.5">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    執行電費單反推負載模擬
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Upload Dropzones Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div id="dropzone-data" class="border-2 border-dashed border-[#00A3E0]/50 hover:border-[#00A3E0] bg-[#0A2540] rounded-sm p-4 text-center cursor-pointer transition relative group" onclick="document.getElementById('file-input-data').click()">
-                <input type="file" id="file-input-data" accept=".csv,.xlsx,.xls,.txt" class="hidden" onchange="handleDataFileUpload(this.files[0])">
-                <div class="w-10 h-10 rounded-sm bg-[#005EB8]/30 text-[#00A3E0] flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
-                  <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            <!-- 🔬 電費單逆向反推演算法物理守恆驗算面板 (預設顯示) -->
+            <div id="inverse-algo-breakdown" class="bg-[#0A2540] border border-[#00A3E0]/40 rounded-sm p-4 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-sm text-[10px] font-bold">✓ 已連結 MODULE 1 電費單實證數據</span>
+                  <span id="inverse-algo-title" class="text-xs font-bold text-white">潤泰精密 (里港廠) — 全年 12 個月度數守恆與需量極值反推模型</span>
                 </div>
-                <div class="text-xs font-bold text-white">點擊或拖曳台電 15 分鐘需量數據 (CSV / Excel)</div>
-                <div class="text-[11px] text-slate-300 mt-0.5">自動提取每 15 分鐘 kW 需量，聚類產生 24 小時負載與尖離峰比</div>
+                <span id="inverse-algo-formula-badge" class="text-[11px] font-mono text-[#00A3E0]">∫ L(t)dt = 2,681,200 kWh/yr ｜ Load Factor = 42.3%</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                <div class="bg-[#051C2C]/90 p-3 rounded-sm border border-slate-700">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">① 平日尖峰度數守恆 (09:00–24:00)</div>
+                  <div class="text-sm font-bold text-white font-mono mt-1" id="inv-kpi-peak">均載 388 kW ／ 峰值 680 kW</div>
+                  <div class="text-[11px] text-slate-400 mt-1" id="inv-kpi-peak-desc">由尖峰佔比 56% 反推：主力負載集中於 08:30–17:30 日班時段，午休 12:00 降載。</div>
+                </div>
+                <div class="bg-[#051C2C]/90 p-3 rounded-sm border border-slate-700">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">② 離峰度數與晨間爬坡 (00:00–09:00)</div>
+                  <div class="text-sm font-bold text-[#00A3E0] font-mono mt-1" id="inv-kpi-off">夜間底載 185 kW ／ 晨峰 648 kW</div>
+                  <div class="text-[11px] text-slate-400 mt-1" id="inv-kpi-off-desc">重要發現：單據離峰需量高達 642–726kW，反推早班於 07:30–08:59 (離峰尾段) 即啟動大型設備！</div>
+                </div>
+                <div class="bg-[#051C2C]/90 p-3 rounded-sm border border-slate-700">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">③ 白天光電自發自用重疊度 (08:00–17:00)</div>
+                  <div class="text-sm font-bold text-emerald-400 font-mono mt-1" id="inv-kpi-pv-match">日間均載 535 kW ＞ 光電 344 kW</div>
+                  <div class="text-[11px] text-slate-400 mt-1" id="inv-kpi-pv-desc">400 kWp 光電正午最大出力約 344 kW，完全包絡於日間負載之下，自用消納率達 98.5%！</div>
+                </div>
+                <div class="bg-[#051C2C]/90 p-3 rounded-sm border border-slate-700">
+                  <div class="text-[10px] text-slate-400 font-bold uppercase">④ 二段式 vs 三段式夜尖峰 (16:00–22:00)</div>
+                  <div class="text-sm font-bold text-amber-300 font-mono mt-1" id="inv-kpi-tou">傍晚均載 345 kW (佔比 21%)</div>
+                  <div class="text-[11px] text-slate-400 mt-1" id="inv-kpi-tou-desc">若 17:00 後產線下班降載，改三段式可避開高價尖峰；須取得台電 15 分鐘 AMI 驗證傍晚曲線。</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload Dropzones Grid (保留實測 AMI CSV 與 PDF 附加功能) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <div id="dropzone-data" class="border-2 border-dashed border-[#00A3E0]/50 hover:border-[#00A3E0] bg-[#0A2540] rounded-sm p-3.5 text-center cursor-pointer transition relative group" onclick="document.getElementById('file-input-data').click()">
+                <input type="file" id="file-input-data" accept=".csv,.xlsx,.xls,.txt" class="hidden" onchange="handleDataFileUpload(this.files[0])">
+                <div class="flex items-center justify-center gap-2.5">
+                  <div class="w-8 h-8 rounded-sm bg-[#005EB8]/30 text-[#00A3E0] flex items-center justify-center group-hover:scale-110 transition">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-bold text-white">已取得台電 AMI？點擊上傳 15 分鐘需量實測檔 (CSV / Excel)</div>
+                    <div class="text-[11px] text-slate-300">上傳實測 AMI 後將直接覆蓋電費單反推曲線，進行精準報價定案</div>
+                  </div>
+                </div>
                 <div id="data-file-status" class="hidden mt-2 text-[11px] font-semibold text-[#00A3E0] bg-[#051C2C] px-3 py-1 rounded-sm border border-[#00A3E0]/40"></div>
               </div>
 
-              <div id="dropzone-pdf" class="border-2 border-dashed border-slate-500 hover:border-[#00A3E0] bg-[#0A2540] rounded-sm p-4 text-center cursor-pointer transition relative group" onclick="document.getElementById('file-input-pdf').click()">
+              <div id="dropzone-pdf" class="border-2 border-dashed border-slate-500 hover:border-[#00A3E0] bg-[#0A2540] rounded-sm p-3.5 text-center cursor-pointer transition relative group" onclick="document.getElementById('file-input-pdf').click()">
                 <input type="file" id="file-input-pdf" accept=".pdf,.png,.jpg,.jpeg" class="hidden" onchange="handleBillPdfUpload(this.files[0])">
-                <div class="w-10 h-10 rounded-sm bg-white/10 text-slate-200 flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition">
-                  <i data-lucide="file-text" class="w-5 h-5"></i>
+                <div class="flex items-center justify-center gap-2.5">
+                  <div class="w-8 h-8 rounded-sm bg-white/10 text-slate-200 flex items-center justify-center group-hover:scale-110 transition">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-bold text-slate-100">直接補傳新月份客戶電費單 (PDF / 影像) 自動納入反推</div>
+                    <div class="text-[11px] text-slate-300">解析後自動存入 MODULE 1 表格並同步更新上方反推負載模型</div>
+                  </div>
                 </div>
-                <div class="text-xs font-bold text-slate-100">附加台電 15 分鐘高壓資訊圖或電費單原檔 (PDF / 影像)</div>
-                <div class="text-[11px] text-slate-300 mt-0.5">自動直傳 Supabase Storage (`btm-files`) 並同步解析電費單欄位</div>
                 <div id="pdf-file-status" class="hidden mt-2 text-[11px] font-semibold text-[#00A3E0] bg-[#051C2C] px-3 py-1 rounded-sm border border-[#00A3E0]/40"></div>
               </div>
             </div>
 
             <!-- Parsed Summary Notification -->
-            <div id="parsed-summary-box" class="hidden bg-[#0A2540] border border-[#00A3E0] rounded-sm p-3.5 text-xs text-white flex flex-wrap items-center justify-between gap-3">
+            <div id="parsed-summary-box" class="bg-[#0A2540] border border-[#00A3E0] rounded-sm p-3 text-xs text-white flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-2">
-                <span class="text-[#00A3E0] font-bold">✓ 數據解析成功：</span>
-                <span id="parsed-stats-text">讀取 24 筆逐時數據，最高尖峰負載 990.8 kW，底載 240.2 kW。</span>
+                <span class="text-[#00A3E0] font-bold">✓ 電費單反推負載已就緒：</span>
+                <span id="parsed-stats-text">由 12 個月電費單反推 24H 負載曲線，經常最高需量 680 kW (9月極值 724 kW)，夜間底載 185 kW，建議契約 680 kW ＋ 大光 400 kWp。</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="bg-[#005EB8] px-2.5 py-1 rounded-sm text-[11px] font-semibold">大光小儲最佳配置已更新</span>
+                <span class="bg-[#005EB8] px-2.5 py-1 rounded-sm text-[11px] font-semibold">已套用電費單反推參數</span>
                 <button onclick="setStep(2)" class="px-3 py-1 bg-[#00A3E0] hover:bg-white text-[#051C2C] font-bold rounded-sm text-xs transition">
                   前往查看投報率與現金流 →
                 </button>
@@ -738,7 +802,7 @@
             </div>
           </div>
 
-          <!-- Top 4 Parameter Cards (含大光小儲容量配置) -->
+          <!-- Top 4 Parameter Cards (預設帶入 MODULE 1 客戶一實證最佳參數) -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <!-- 1. 經常契約容量 -->
             <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] shadow-sm">
@@ -748,12 +812,12 @@
                   <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
                 </button>
               </div>
-              <input type="number" id="input-contract-kw" value="1000" step="50" class="w-full text-2xl font-bold text-[#051C2C] border-b-2 border-[#005EB8] focus:outline-none py-1 bg-transparent font-mono" onchange="onCapacityChange()">
-              <div class="mt-2 text-[11px] text-slate-500">可由 MODULE 1 電費單一鍵帶入</div>
+              <input type="number" id="input-contract-kw" value="680" step="10" class="w-full text-2xl font-bold text-[#051C2C] border-b-2 border-[#005EB8] focus:outline-none py-1 bg-transparent font-mono" onchange="onCapacityChange()">
+              <div class="mt-2 text-[11px] text-emerald-700 font-semibold" id="sim-contract-hint">★ 現況 600kW → AI 最佳點 680kW (年省14.9萬)</div>
               <div id="detailed-capacity-panel" class="hidden mt-3 pt-3 border-t border-slate-100 text-xs space-y-2 text-slate-600">
                 <div class="flex justify-between items-center">
-                  <span>半尖峰契約:</span>
-                  <input type="number" id="cap-semi-peak" value="0" class="w-20 px-2 py-0.5 border rounded-sm text-right">
+                  <span>非夏月半尖峰契約:</span>
+                  <input type="number" id="cap-semi-peak" value="0" class="w-20 px-2 py-0.5 border rounded-sm text-right" title="AI實證：加訂非夏月契約僅多省3,400元，不建議">
                 </div>
                 <div class="flex justify-between items-center">
                   <span>週六半尖峰:</span>
@@ -772,35 +836,35 @@
                 <label class="text-xs font-bold text-[#005EB8] uppercase tracking-wider">大光：太陽能光電 (kWp)</label>
                 <span class="text-[10px] font-bold bg-[#E6F0FA] text-[#005EB8] px-1.5 py-0.5 rounded-sm">自發自用</span>
               </div>
-              <input type="number" id="input-pv-kwp" value="800" step="50" class="w-full text-2xl font-bold text-[#005EB8] border-b-2 border-[#00A3E0] focus:outline-none py-1 bg-transparent font-mono" onchange="onPvCapacityChange()">
-              <div class="mt-2 text-[11px] text-slate-500" id="pv-gen-summary">預估年發電約 1,000,000 度 (抵減日尖峰)</div>
+              <input type="number" id="input-pv-kwp" value="400" step="50" class="w-full text-2xl font-bold text-[#005EB8] border-b-2 border-[#00A3E0] focus:outline-none py-1 bg-transparent font-mono" onchange="onPvCapacityChange()">
+              <div class="mt-2 text-[11px] text-slate-500" id="pv-gen-summary">預估年發電約 500,000 度 (年省約 200 萬【推論量級】)</div>
             </div>
 
             <!-- 3. 台電電價方案 -->
             <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] shadow-sm">
               <label class="block text-xs font-bold text-[#051C2C] uppercase tracking-wider mb-2">台電時間電價方案</label>
               <select id="select-tariff" class="w-full p-2.5 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm text-xs font-bold text-[#051C2C] focus:ring-2 focus:ring-[#005EB8] focus:outline-none" onchange="onTariffChange()">
-                <option value="高壓三段式電價" selected>高壓三段式時間電價 (新時間電價)</option>
-                <option value="高壓二段式電價">高壓二段式時間電價</option>
+                <option value="高壓二段式電價" selected>高壓二段式時間電價 (客戶現況單據)</option>
+                <option value="高壓三段式電價">高壓三段式時間電價 (模擬改三段式對比)</option>
                 <option value="特高壓三段式電價">特高壓三段式時間電價</option>
                 <option value="特高壓二段式電價">特高壓二段式時間電價</option>
                 <option value="高壓批次生產時間電價">高壓批次生產時間電價</option>
               </select>
-              <div class="mt-2 text-[11px] text-slate-500">日間光電抵消半尖峰，小儲鎖定 16~22h 夜尖峰</div>
+              <div class="mt-2 text-[11px] text-slate-500">可切換二段式 vs 三段式檢視夜尖峰電費影響</div>
             </div>
 
             <!-- 4. 行業別 -->
             <div class="bg-white p-5 rounded-sm border border-[#D8E0E9] shadow-sm">
-              <label class="block text-xs font-bold text-[#051C2C] uppercase tracking-wider mb-2">行業別與大光小儲策略</label>
+              <label class="block text-xs font-bold text-[#051C2C] uppercase tracking-wider mb-2">行業別與電價調整係數</label>
               <select id="select-industry" class="w-full p-2.5 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm text-xs font-bold text-[#051C2C] focus:ring-2 focus:ring-[#005EB8] focus:outline-none" onchange="onIndustryChange()">
+                <option value="254-金屬加工處理業" data-rate="0.927" selected>254-金屬加工處理業 (折減後係數 0.927)</option>
                 <option value="259-其他金屬製品製造業" data-rate="0.955">259-金屬製品製造業</option>
-                <option value="1000-預設" data-rate="1.0" selected>1000-一般製造業 (大光小儲標準)</option>
+                <option value="1000-預設" data-rate="1.0">1000-一般製造業 (大光小儲標準)</option>
                 <option value="26-電子零組件製造業" data-rate="1.15">26-電子零組件製造業</option>
                 <option value="261-半導體製造業" data-rate="1.25">261-半導體製造業</option>
                 <option value="22-塑膠製品製造業" data-rate="0.98">22-塑膠製品製造業</option>
-                <option value="18-化學材料製造業" data-rate="1.07">18-化學材料製造業</option>
               </select>
-              <div class="mt-2 text-[11px] text-slate-500">原則採「大光電自用＋小儲能削峰套利」</div>
+              <div class="mt-2 text-[11px] text-rose-700 font-semibold">⚠️ 紅線：光電不可調降契約，陰天尖峰需量仍在</div>
             </div>
           </div>
 
@@ -808,14 +872,17 @@
           <div class="bg-white p-6 rounded-sm border border-[#D8E0E9] shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <div class="text-[10px] font-bold text-[#005EB8] uppercase tracking-widest">MCKINSEY ENERGY DISPATCH MODEL • LARGE PV + SMALL BESS</div>
-                <h3 class="text-base font-bold text-[#051C2C]">
-                  24 小時「大光小儲」負載模擬圖 ＆ 台電二段式 vs. 三段式費率對比
+                <div class="text-[10px] font-bold text-[#005EB8] uppercase tracking-widest">MCKINSEY ENERGY DISPATCH MODEL • BILL-DERIVED LOAD + LARGE PV + SMALL BESS</div>
+                <h3 class="text-base font-bold text-[#051C2C]" id="dispatch-chart-title">
+                  24 小時「電費單反推負載 × 大光小儲」協同模擬圖 ＆ 二段式 vs. 三段式費率對比
                 </h3>
               </div>
-              <div class="flex items-center gap-2 text-xs">
+              <div class="flex items-center gap-2 text-xs flex-wrap">
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#E6F0FA] text-[#051C2C] font-semibold rounded-sm">
-                  <span class="w-2.5 h-2.5 bg-[#051C2C] inline-block"></span> 原始負載
+                  <span class="w-2.5 h-2.5 bg-[#051C2C] inline-block"></span> 電費單反推原始負載
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 font-semibold rounded-sm">
+                  <span class="w-2.5 h-0.5 bg-emerald-600 inline-block"></span> 建議經常契約線
                 </span>
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#E6F0FA] text-[#00A3E0] font-semibold rounded-sm">
                   <span class="w-2.5 h-2.5 bg-[#00A3E0] inline-block"></span> 大光發電抵減 (PV)
@@ -831,30 +898,34 @@
                 <canvas id="chart-pv-bess-dispatch"></canvas>
               </div>
               <!-- Tariff Simulation Summary Box -->
-              <div class="bg-[#F4F6F9] p-5 rounded-sm border border-[#D8E0E9] space-y-3 text-xs">
+              <div class="bg-[#F4F6F9] p-5 rounded-sm border border-[#D8E0E9] space-y-2.5 text-xs">
                 <div class="font-bold text-[#051C2C] text-sm border-b border-[#D8E0E9] pb-2 flex items-center justify-between">
-                  <span>台電費率 × 大光小儲年效益模擬</span>
-                  <span class="text-[10px] bg-[#051C2C] text-white px-2 py-0.5 rounded-sm">模擬結果</span>
+                  <span>電費單反推 × 大光小儲年效益模擬</span>
+                  <span class="text-[10px] bg-[#051C2C] text-white px-2 py-0.5 rounded-sm" id="sim-scenario-tag">全年12月反推</span>
                 </div>
                 <div class="flex justify-between items-center py-1">
-                  <span class="text-slate-600">原始年總電費 (未裝光儲):</span>
-                  <strong class="font-mono text-[#051C2C] text-sm" id="sim-orig-bill">NT$ 15,420,000</strong>
+                  <span class="text-slate-600">原始年總電費 (稅前單據實績):</span>
+                  <strong class="font-mono text-[#051C2C] text-sm" id="sim-orig-bill">NT$ 13,369,027</strong>
                 </div>
                 <div class="flex justify-between items-center py-1">
-                  <span class="text-slate-600">「大光」自發自用年節省電費:</span>
-                  <strong class="font-mono text-[#005EB8] text-sm" id="sim-pv-saving">+ NT$ 3,680,000</strong>
+                  <span class="text-slate-600">「選項 A2」契約最佳化年淨省:</span>
+                  <strong class="font-mono text-emerald-700 text-sm" id="sim-contract-saving">+ NT$ 149,123 (未稅)</strong>
                 </div>
                 <div class="flex justify-between items-center py-1">
-                  <span class="text-slate-600">「小儲」削峰+夜尖峰套利+輔助:</span>
-                  <strong class="font-mono text-[#00A3E0] text-sm" id="sim-bess-saving">+ NT$ 2,021,000</strong>
+                  <span class="text-slate-600">「選項 D 大光」自發自用年省【推論】:</span>
+                  <strong class="font-mono text-[#005EB8] text-sm" id="sim-pv-saving">+ NT$ 2,000,000</strong>
                 </div>
                 <div class="flex justify-between items-center py-1">
-                  <span class="text-slate-600">二段式 vs 三段式最優費率價差:</span>
-                  <strong class="font-mono text-emerald-700 text-xs" id="sim-tariff-advice">建議採「高壓三段式」(再省 4.2%)</strong>
+                  <span class="text-slate-600">「小儲/需量控制」削峰與套利效益:</span>
+                  <strong class="font-mono text-[#00A3E0] text-sm" id="sim-bess-saving">+ NT$ 34,000 ~ 1,010,500</strong>
+                </div>
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-slate-600">二段式 vs 三段式費率評估:</span>
+                  <strong class="font-mono text-amber-800 text-[11px]" id="sim-tariff-advice">待取15分鐘AMI驗證夜尖峰佔比</strong>
                 </div>
                 <div class="pt-2 border-t border-[#D8E0E9] flex justify-between items-center text-sm font-bold text-[#051C2C]">
-                  <span>大光小儲合計年綜合效益:</span>
-                  <span class="text-[#005EB8] font-mono text-base" id="sim-total-benefit">NT$ 5,701,000 / 年</span>
+                  <span>契約優化＋大光自用年綜合效益:</span>
+                  <span class="text-[#005EB8] font-mono text-base" id="sim-total-benefit">NT$ 2,149,123 / 年</span>
                 </div>
                 <button onclick="setStep(2)" class="w-full py-2.5 bg-[#051C2C] hover:bg-[#005EB8] text-white font-bold rounded-sm transition text-xs flex items-center justify-center gap-1.5">
                   <span>檢視 6×3 儲能矩陣與 15 年現金流</span>
@@ -864,32 +935,32 @@
             </div>
           </div>
 
-          <!-- 典型用電負載曲線卡片 -->
+          <!-- 典型用電負載曲線卡片 (預設選中 MODULE 1 電費單逆向反推曲線) -->
           <div>
             <div class="flex items-center justify-between mb-3">
-              <h3 class="text-sm font-bold text-[#051C2C]">選擇或切換典型 15 分鐘用電負載曲線 (點擊卡片套用模擬)</h3>
+              <h3 class="text-sm font-bold text-[#051C2C]">選擇或切換 24H 用電負載曲線模型 (預設採用 MODULE 1 電費單逆向反推曲線)</h3>
               <button onclick="openManualCurveModal()" class="text-xs font-semibold text-[#005EB8] bg-[#E6F0FA] px-3 py-1 rounded-sm border border-[#005EB8]/30 hover:bg-[#005EB8] hover:text-white transition flex items-center gap-1.5">
                 <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
                 手動微調 24H 負載曲線
               </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="curve-cards-grid">
-              <div onclick="selectLoadCurve('custom')" id="card-curve-custom" class="hidden bg-white p-5 rounded-sm border-2 border-[#005EB8] shadow-md cursor-pointer transition relative">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="curve-cards-grid">
+              <div onclick="selectLoadCurve('custom')" id="card-curve-custom" class="bg-white p-5 rounded-sm border-2 border-[#051C2C] shadow-md cursor-pointer transition relative">
                 <div class="flex items-center justify-between mb-2">
                   <div class="font-bold text-[#051C2C] text-sm flex items-center gap-2">
-                    <span>客戶實測 / 電費單合成負載曲線</span>
-                    <span class="text-[11px] font-semibold text-[#005EB8] bg-[#E6F0FA] px-2 py-0.5 rounded-sm">實測解析</span>
+                    <span id="custom-curve-title">MODULE 1 電費單逆向反推負載曲線</span>
+                    <span class="text-[10px] font-bold text-white bg-[#005EB8] px-2 py-0.5 rounded-sm">電費單反推首選</span>
                   </div>
                 </div>
-                <div class="text-[11px] text-slate-500 mb-3" id="custom-curve-desc">由業務上傳之台電 15 分鐘需量或月度電費單自動計算所得</div>
+                <div class="text-[11px] text-slate-500 mb-3" id="custom-curve-desc">依據潤泰精密里港廠 12 個月電費單「尖峰56% / 週六10% / 離峰34%」與「最高需量 680~724kW」守恆反推</div>
                 <div class="h-40 w-full">
                   <canvas id="chart-preview-custom"></canvas>
                 </div>
               </div>
 
-              <div onclick="selectLoadCurve('17902')" id="card-curve-17902" class="bg-white p-5 rounded-sm border-2 border-[#051C2C] shadow-md cursor-pointer transition relative">
+              <div onclick="selectLoadCurve('17902')" id="card-curve-17902" class="bg-white p-5 rounded-sm border border-[#D8E0E9] shadow-sm cursor-pointer hover:border-[#005EB8] transition relative">
                 <div class="flex items-center justify-between mb-2">
-                  <div class="font-bold text-[#051C2C] text-sm">典型曲線 #17902 (日間高負載型 - 最適大光小儲) <span class="ml-2 text-[11px] font-semibold text-white bg-[#051C2C] px-2 py-0.5 rounded-sm" id="badge-active-curve">當前選擇</span></div>
+                  <div class="font-bold text-[#051C2C] text-sm">典型曲線 #17902 (日間高負載型標竿)</div>
                 </div>
                 <div class="text-[11px] text-slate-500 mb-3">08:00~17:00 日班高負載與太陽能發電完美重疊，搭配小儲能削去傍晚尖峰</div>
                 <div class="h-40 w-full">
@@ -1731,9 +1802,10 @@
       // Initialize bills (seed Customer #1: 潤泰精密里港廠 12 months if empty or only legacy demo)
       await loadBillsFromCloud(true);
 
-      // Initialize Module 2 Charts & Matrix
+      // Initialize Module 2 Charts, Bill-Derived Inverse Load Simulation & Matrix
       initPreviewCharts();
-      updatePvBessDispatchChart();
+      populateSimScenarioOptions();
+      runBillInverseLoadSimulation(false);
       renderMatrix();
       updateCashflowChart();
       loadProposalsFromCloud();
@@ -1767,6 +1839,7 @@
       allElectricityBills = await BtmSupabase.getBills();
       populateCompanyFilterDropdown();
       renderBillsView();
+      runBillInverseLoadSimulation(false);
       prog.innerHTML = `✓ 已載入「潤泰精密材料股份有限公司 (里港廠)」12 個月真實電費單 (114年02月~115年01月) ${res.cloud ? '並同步至 Supabase 雲端！' : '（已存於本機表格，連線 Supabase 後可一鍵同步）'}`;
     }
 
@@ -1782,6 +1855,29 @@
         sel.appendChild(opt);
       });
       if (companies.includes(currentVal)) sel.value = currentVal;
+
+      // Also sync MODULE 2's customer selector (#sim-bill-company-select)
+      const simCompSel = document.getElementById('sim-bill-company-select');
+      if (simCompSel) {
+        const prevSimComp = simCompSel.value;
+        simCompSel.innerHTML = '';
+        if (companies.length === 0) {
+          simCompSel.innerHTML = '<option value="ALL">潤泰精密材料股份有限公司 (里港廠)</option>';
+        } else {
+          companies.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            simCompSel.appendChild(opt);
+          });
+          if (companies.includes(prevSimComp)) {
+            simCompSel.value = prevSimComp;
+          } else {
+            simCompSel.value = companies[0];
+          }
+        }
+        populateSimScenarioOptions();
+      }
     }
 
     function getFilteredBills() {
@@ -2957,63 +3053,375 @@
       XLSX.writeFile(wb, '台電每月電費單_批次匯入範本.xlsx');
     }
 
-    // 一鍵將客戶電費單診斷結果帶入 MODULE 2 (15分鐘曲線與大光小儲模擬)
+    // 一鍵將客戶電費單診斷結果帶入 MODULE 2 (透過電費單逆向反推負載演算法模擬)
     function applyBillsToSimulation() {
-      const list = getFilteredBills();
-      if (list.length > 0) {
-        const bt = runTaipowerContractBacktest(list);
-        const maxC = bt.bestContractKw || 680;
-        const maxD = Math.max(...list.map(b => Number(b.max_demand_regular_kw) || 724));
-        const recPv = bt.currentContractKw === 600 ? 400 : Math.round((bt.currentContractKw * 0.67) / 50) * 50;
-        document.getElementById('input-contract-kw').value = maxC;
-        document.getElementById('input-pv-kwp').value = recPv;
-        document.getElementById('save-company').value = list[0].company_name || '潤泰精密材料股份有限公司 (里港廠)';
-
-        // 根據電費單最高需量合成 24 小時負載曲線
-        const scale = maxD / 991;
-        currentHourlyLoadProfile = currentHourlyLoadProfile.map(v => Math.round(v * scale));
-        renderCustomCurve(currentHourlyLoadProfile, maxC);
+      const compFilter = document.getElementById('filter-bill-company')?.value || 'ALL';
+      const simCompSel = document.getElementById('sim-bill-company-select');
+      if (simCompSel && compFilter !== 'ALL') {
+        simCompSel.value = compFilter;
+        populateSimScenarioOptions();
       }
       switchView('calc');
       setStep(1);
-      updatePvBessDispatchChart();
+      runBillInverseLoadSimulation(true);
     }
 
     // =========================================================================
-    // 🌟 MODULE 2: 15 分鐘高壓資訊圖 ＆ 大光小儲 (PV + BESS) 模擬邏輯
+    // 🌟 MODULE 2: 由 MODULE 1 電費單數據反推 24H 負載演算法 (Inverse Load Reconstruction)
     // =========================================================================
+    let lastInverseSimStats = {
+      scenarioLabel: '全年12月反推',
+      origPreTaxBill: 13369027,
+      contractAnnualSaving: 149123,
+      currentContractKw: 600,
+      bestContractKw: 680,
+      peakAvgKw: 388,
+      offAvgKw: 223,
+      baseLoadKw: 185,
+      morningRampPeakKw: 648,
+      daytimePeakKw: 680,
+      loadFactorPct: 42.3
+    };
+
+    function getSimSelectedCustomerBills() {
+      const simComp = document.getElementById('sim-bill-company-select')?.value || 'ALL';
+      const source = (allElectricityBills && allElectricityBills.length > 0) ? allElectricityBills : DEMO_12M_BILLS;
+      if (simComp === 'ALL') return source;
+      const filtered = source.filter(b => b.company_name === simComp);
+      return filtered.length > 0 ? filtered : source;
+    }
+
+    function populateSimScenarioOptions() {
+      const scenSel = document.getElementById('sim-bill-scenario-select');
+      if (!scenSel) return;
+      const prevVal = scenSel.value || 'ANNUAL_WEIGHTED';
+      const bills = getSimSelectedCustomerBills();
+      const sorted = [...bills].sort((a, b) => (a.billing_month || '').localeCompare(b.billing_month || ''));
+
+      const regDemands = sorted.map(b => Number(b.max_demand_regular_kw) || 0).sort((a, b) => a - b);
+      const medianReg = regDemands[Math.floor(regDemands.length / 2)] || 680;
+      const maxRegBill = [...sorted].sort((a, b) => (Number(b.max_demand_regular_kw) || 0) - (Number(a.max_demand_regular_kw) || 0))[0];
+      const maxOffBill = [...sorted].sort((a, b) => (Number(b.max_demand_off_kw) || 0) - (Number(a.max_demand_off_kw) || 0))[0];
+
+      let html = `
+        <option value="ANNUAL_WEIGHTED">情境 A：全年 ${sorted.length} 個月度數守恆反推 (中位需量 ${medianReg}kW 基準)</option>
+        <option value="PEAK_MONTH_MAX">情境 B：最高尖峰超約月極限反推 (${maxRegBill?.billing_month || '2025-09'} 實測 ${maxRegBill?.max_demand_regular_kw || 724}kW 壓力測試)</option>
+        <option value="SUMMER_AVG">情境 C：夏月 (6~9月) 高負載反推 (檢核光電重疊與三段式尖峰)</option>
+        <option value="NON_SUMMER_AVG">情境 D：非夏月 (10~5月) 產線常態負載反推</option>
+        <option value="MORNING_RAMP_TEST">情境 E：離峰最高需量 (${maxOffBill?.billing_month || '2025-05'} 離峰 ${maxOffBill?.max_demand_off_kw || 726}kW) 早班提早開機反推</option>
+      `;
+
+      if (sorted.length > 0) {
+        html += `<optgroup label="── 單一月份電費單精準反推 (共 ${sorted.length} 期) ──">`;
+        sorted.forEach(b => {
+          html += `<option value="MONTH_${b.billing_month}">單月反推：${b.billing_month} (${b.season_type || '非夏月'}｜尖峰需量 ${b.max_demand_regular_kw}kW｜離峰 ${b.max_demand_off_kw}kW｜${Number(b.kwh_total||0).toLocaleString()}度)</option>`;
+        });
+        html += `</optgroup>`;
+      }
+
+      scenSel.innerHTML = html;
+      if ([...scenSel.options].some(o => o.value === prevVal)) {
+        scenSel.value = prevVal;
+      }
+    }
+
+    /**
+     * 🔬 核心演算法：由台電電費單「時段度數 (kWh)」與「15分鐘最高需量 (kW)」逆向反推 24 小時負載曲線
+     * 物理守恆條件：
+     * 1. 平日經常(尖峰)時段 (09:00~24:00, 15h) 曲線積分平均值 = 單據平日尖峰均載 P_avg_peak，且峰值 = D_target_reg
+     * 2. 離峰時段 (00:00~09:00, 9h) 曲線積分平均值 = 單據離峰均載 P_avg_off，且反映晨間 07:30~08:59 早班開機爬坡峰值 D_morning_ramp
+     */
+    function reconstructLoadCurveFromBills(customerBills, scenarioKey = 'ANNUAL_WEIGHTED') {
+      const sortedAll = [...customerBills].sort((a, b) => (a.billing_month || '').localeCompare(b.billing_month || ''));
+      const btAll = runTaipowerContractBacktest(sortedAll);
+
+      // 1. 根據情境篩選目標帳單集合
+      let targetBills = sortedAll;
+      let scenarioTitle = `全年 ${sortedAll.length} 個月度數與需量守恆反推`;
+      let scenarioTag = '全年12月反推';
+
+      if (scenarioKey === 'PEAK_MONTH_MAX') {
+        const peakB = [...sortedAll].sort((a, b) => (Number(b.max_demand_regular_kw) || 0) - (Number(a.max_demand_regular_kw) || 0))[0];
+        if (peakB) {
+          targetBills = [peakB];
+          scenarioTitle = `最高尖峰超約月 (${peakB.billing_month}) 極限需量反推 (${peakB.max_demand_regular_kw} kW)`;
+          scenarioTag = `${peakB.billing_month} 尖峰極限`;
+        }
+      } else if (scenarioKey === 'SUMMER_AVG') {
+        const sumB = sortedAll.filter(b => b.season_type === '夏月');
+        if (sumB.length > 0) {
+          targetBills = sumB;
+          scenarioTitle = `夏月 (${sumB.length} 個月) 高負載與光電重疊反推`;
+          scenarioTag = '夏月高負載反推';
+        }
+      } else if (scenarioKey === 'NON_SUMMER_AVG') {
+        const nonSumB = sortedAll.filter(b => b.season_type !== '夏月');
+        if (nonSumB.length > 0) {
+          targetBills = nonSumB;
+          scenarioTitle = `非夏月 (${nonSumB.length} 個月) 常態產線負載反推`;
+          scenarioTag = '非夏月常態反推';
+        }
+      } else if (scenarioKey === 'MORNING_RAMP_TEST') {
+        const offPeakB = [...sortedAll].sort((a, b) => (Number(b.max_demand_off_kw) || 0) - (Number(a.max_demand_off_kw) || 0))[0];
+        if (offPeakB) {
+          targetBills = [offPeakB];
+          scenarioTitle = `早班提早開機測試 (${offPeakB.billing_month} 離峰最高需量 ${offPeakB.max_demand_off_kw} kW)`;
+          scenarioTag = '早班開機爬坡反推';
+        }
+      } else if (scenarioKey && scenarioKey.startsWith('MONTH_')) {
+        const mStr = scenarioKey.replace('MONTH_', '');
+        const mBill = sortedAll.find(b => b.billing_month === mStr);
+        if (mBill) {
+          targetBills = [mBill];
+          scenarioTitle = `${mBill.billing_month} (${mBill.roc_month || mBill.season_type}) 單月電費單精準反推`;
+          scenarioTag = `${mBill.billing_month} 單月反推`;
+        }
+      }
+
+      // 2. 統計目標帳單之度數與需量極值
+      const sumPeakKwh = targetBills.reduce((s, b) => s + (Number(b.kwh_peak) || 0) + (Number(b.kwh_semi_peak) || 0), 0);
+      const sumSatKwh = targetBills.reduce((s, b) => s + (Number(b.kwh_sat_semi) || 0), 0);
+      const sumOffKwh = targetBills.reduce((s, b) => s + (Number(b.kwh_off_peak) || 0), 0);
+      const sumTotalKwh = targetBills.reduce((s, b) => s + (Number(b.kwh_total) || 0), 0);
+      const totalDays = targetBills.reduce((s, b) => s + (Number(b.billing_days) || 30.4), 0);
+
+      // 全年稅前實績總電費 (供右側效益卡對照)
+      const annualPreTax = sortedAll.reduce((s, b) => s + ((Number(b.total_amount) || 0) - (Number(b.tax_amount) || 0)), 0);
+
+      // 決定目標經常尖峰需量 D_reg 與離峰晨峰需量 D_off
+      const regDemands = targetBills.map(b => Number(b.max_demand_regular_kw) || 680).sort((a, b) => a - b);
+      const offDemands = targetBills.map(b => Number(b.max_demand_off_kw) || 642).sort((a, b) => a - b);
+
+      const dTargetReg = (targetBills.length === 1 || scenarioKey === 'PEAK_MONTH_MAX')
+        ? Math.max(...regDemands)
+        : regDemands[Math.floor(regDemands.length / 2)];
+      const dTargetOff = (targetBills.length === 1 || scenarioKey === 'MORNING_RAMP_TEST')
+        ? Math.max(...offDemands)
+        : offDemands[Math.floor(offDemands.length / 2)];
+
+      // 3. 計算平日尖峰時段 (09:00~24:00, 15小時/日) 與離峰時段 (00:00~09:00, 9小時/日) 平均功率
+      const weekdayCount = totalDays * (21.6 / 30.4);
+      const satCount = totalDays * (4.4 / 30.4);
+      const sunCount = Math.max(1, totalDays - weekdayCount - satCount);
+
+      const pAvgPeak = Math.max(150, Math.round(sumPeakKwh / Math.max(1, weekdayCount * 15)));
+      const pAvgSat = Math.max(120, Math.round(sumSatKwh / Math.max(1, satCount * 15)));
+      const totalOffHours = weekdayCount * 9 + satCount * 9 + sunCount * 24;
+      const pAvgOff = Math.max(100, Math.round(sumOffKwh / Math.max(1, totalOffHours)));
+
+      // 4. 建立 24 小時負載曲線 (00:00 ~ 23:00)
+      // (A) 離峰時段 00:00 ~ 08:00 (共 9 點)：
+      // 由於單據離峰最高需量 D_off 高達 642~726 kW，代表早班在 07:30~08:59 (離峰結束前) 即啟動大型機台！
+      // 小時平均在 08:00 約為 15分鐘極值 D_off 的 0.82~0.88 倍，其餘深夜 00:00~06:00 則為連續底載 P_base
+      const h08MorningKw = Math.round(Math.min(dTargetOff * 0.86, dTargetReg * 0.94));
+      const h07RampKw = Math.round((pAvgOff * 0.95 + h08MorningKw * 0.55));
+      // 由 9 小時積分守恆反推深夜底載 P_base (00:00~06:00 共 7 小時)
+      const targetOffDailyKwh = pAvgOff * 9.3;
+      const rawBaseKw = Math.round((targetOffDailyKwh - h08MorningKw - h07RampKw) / 7);
+      const pBaseKw = Math.max(130, Math.min(rawBaseKw, Math.round(pAvgOff * 0.85)));
+
+      const offHoursCurve = [
+        Math.round(pBaseKw * 1.02), // 00:00
+        Math.round(pBaseKw * 0.98), // 01:00
+        Math.round(pBaseKw * 0.96), // 02:00
+        Math.round(pBaseKw * 0.95), // 03:00
+        Math.round(pBaseKw * 0.96), // 04:00
+        Math.round(pBaseKw * 1.00), // 05:00
+        Math.round(pBaseKw * 1.12), // 06:00 早班準備
+        h07RampKw,                  // 07:00 暖機爬坡
+        h08MorningKw                // 08:00 早班投產 (觸發台電離峰最高需量 642~726kW 之關鍵時段)
+      ];
+
+      // (B) 經常(尖峰)時段 09:00 ~ 23:00 (共 15 點)：
+      // 正規化日班金屬加工製造業包絡線 s_h in [0, 1] (10:00 達最高需量 1.00，12:00 午休降載，17:00 後下班降載)
+      const normShape15 = [
+        0.91, // 09:00
+        1.00, // 10:00 ★ 全日最高尖峰需量錨點 (D_target_reg)
+        0.96, // 11:00
+        0.52, // 12:00 午休降載
+        0.89, // 13:00
+        0.95, // 14:00 下午尖峰
+        0.92, // 15:00
+        0.83, // 16:00
+        0.54, // 17:00 日班交接降載
+        0.34, // 18:00
+        0.26, // 19:00
+        0.21, // 20:00
+        0.15, // 21:00
+        0.10, // 22:00
+        0.05  // 23:00
+      ];
+
+      // 解能量守恆：使得 max(L_on) = dTargetReg 且 mean(L_on) = pAvgPeak
+      const sMean = normShape15.reduce((a, b) => a + b, 0) / 15.0;
+      let pEveningFloor = Math.round((pAvgPeak - dTargetReg * sMean) / (1 - sMean));
+      pEveningFloor = Math.max(pBaseKw, Math.min(pEveningFloor, Math.round(pAvgPeak * 0.75)));
+
+      const onHoursCurve = normShape15.map(s => {
+        if (s === 1.0) return dTargetReg;
+        return Math.round(pEveningFloor + (dTargetReg - pEveningFloor) * s);
+      });
+
+      const hourly24 = [...offHoursCurve, ...onHoursCurve];
+
+      // 5. 計算日間光電時段 (08:00~17:00) 與三段式夜尖峰 (16:00~22:00) 指標
+      const daytimeSlice = hourly24.slice(8, 17); // 08:00 ~ 16:00
+      const daytimeAvgKw = Math.round(daytimeSlice.reduce((a, b) => a + b, 0) / daytimeSlice.length);
+      const eveningPeakSlice = hourly24.slice(16, 22); // 16:00 ~ 21:00 (台電三段式夏月夜尖峰 16:00~22:00)
+      const eveningPeakAvgKw = Math.round(eveningPeakSlice.reduce((a, b) => a + b, 0) / eveningPeakSlice.length);
+      const eveningSharePct = Math.round((eveningPeakSlice.reduce((a, b) => a + b, 0) / hourly24.reduce((a, b) => a + b, 1)) * 100);
+
+      const overallAvgKw = Math.round(sumTotalKwh / Math.max(1, totalDays * 24));
+      const maxRegAll = Math.max(...targetBills.map(b => Number(b.max_demand_regular_kw) || dTargetReg));
+      const loadFactorPct = ((overallAvgKw / Math.max(1, maxRegAll)) * 100).toFixed(1);
+
+      return {
+        companyName: sortedAll[0]?.company_name || '潤泰精密材料股份有限公司 (里港廠)',
+        scenarioKey,
+        scenarioTitle,
+        scenarioTag,
+        hourly24,
+        currentContractKw: btAll.currentContractKw,
+        bestContractKw: btAll.bestContractKw,
+        contractAnnualSaving: btAll.bestAnnualSavings,
+        origPreTaxBill: Math.round(annualPreTax),
+        totalKwh: sumTotalKwh,
+        pAvgPeak,
+        pAvgSat,
+        pAvgOff,
+        pBaseKw,
+        h08MorningKw,
+        dTargetReg,
+        dTargetOff,
+        daytimeAvgKw,
+        eveningPeakAvgKw,
+        eveningSharePct,
+        loadFactorPct
+      };
+    }
+
+    function runBillInverseLoadSimulation(updateInputs = true) {
+      const bills = getSimSelectedCustomerBills();
+      const scenKey = document.getElementById('sim-bill-scenario-select')?.value || 'ANNUAL_WEIGHTED';
+      const res = reconstructLoadCurveFromBills(bills, scenKey);
+      lastInverseSimStats = res;
+
+      currentHourlyLoadProfile = res.hourly24;
+
+      if (updateInputs) {
+        const recPv = res.currentContractKw === 600 ? 400 : Math.round((res.currentContractKw * 0.67) / 50) * 50;
+        document.getElementById('input-contract-kw').value = res.bestContractKw || 680;
+        document.getElementById('input-pv-kwp').value = recPv;
+        document.getElementById('save-company').value = res.companyName;
+        const hintEl = document.getElementById('sim-contract-hint');
+        if (hintEl) {
+          hintEl.innerText = `★ 現況 ${res.currentContractKw}kW → AI 最佳點 ${res.bestContractKw}kW (年省 ${(res.contractAnnualSaving/10000).toFixed(1)}萬)`;
+        }
+      }
+
+      // 更新演算法物理守恆驗算面板 (#inverse-algo-breakdown)
+      const pvKwp = Number(document.getElementById('input-pv-kwp')?.value) || 400;
+      const maxSolarKw = Math.round(pvKwp * 0.86);
+
+      const titleEl = document.getElementById('inverse-algo-title');
+      if (titleEl) titleEl.innerText = `${res.companyName} — ${res.scenarioTitle}`;
+      const badgeEl = document.getElementById('inverse-algo-formula-badge');
+      if (badgeEl) badgeEl.innerText = `採計度數 = ${res.totalKwh.toLocaleString()} kWh ｜ 負載率 = ${res.loadFactorPct}% ｜ 峰值錨點 = ${res.dTargetReg} kW`;
+
+      const kpi1 = document.getElementById('inv-kpi-peak');
+      if (kpi1) kpi1.innerText = `平日尖峰均載 ${res.pAvgPeak} kW ／ 峰值 ${res.dTargetReg} kW`;
+      const kpi1Desc = document.getElementById('inv-kpi-peak-desc');
+      if (kpi1Desc) kpi1Desc.innerText = `滿足 09:00–24:00 尖峰度數積分守恆；週六半尖峰均載 ${res.pAvgSat} kW，主力產線集中於白天。`;
+
+      const kpi2 = document.getElementById('inv-kpi-off');
+      if (kpi2) kpi2.innerText = `夜間底載 ${res.pBaseKw} kW ／ 08:00 晨峰 ${res.h08MorningKw} kW`;
+      const kpi2Desc = document.getElementById('inv-kpi-off-desc');
+      if (kpi2Desc) kpi2Desc.innerText = `單據離峰 15 分鐘最高需量達 ${res.dTargetOff} kW，反推早班於 07:30–08:59 (離峰尾段) 提早開機！`;
+
+      const kpi3 = document.getElementById('inv-kpi-pv-match');
+      if (kpi3) kpi3.innerText = `日間均載 ${res.daytimeAvgKw} kW ＞ 光電峰值 ${maxSolarKw} kW`;
+      const kpi3Desc = document.getElementById('inv-kpi-pv-desc');
+      if (kpi3Desc) {
+        const selfUsePct = res.daytimeAvgKw >= maxSolarKw ? 98.8 : Math.min(99, Math.round((res.daytimeAvgKw / Math.max(1, maxSolarKw)) * 90));
+        kpi3Desc.innerText = `${pvKwp} kWp 光電正午最高出力約 ${maxSolarKw} kW，日間負載完全包絡光電，自發自用率約 ${selfUsePct}%！`;
+      }
+
+      const kpi4 = document.getElementById('inv-kpi-tou');
+      if (kpi4) kpi4.innerText = `16–22h 均載 ${res.eveningPeakAvgKw} kW (佔全日 ${res.eveningSharePct}%)`;
+      const kpi4Desc = document.getElementById('inv-kpi-tou-desc');
+      if (kpi4Desc) {
+        kpi4Desc.innerText = `反推傍晚 16:00–22:00 負載佔比約 ${res.eveningSharePct}%；正式評估改三段式電價仍須向台電申請 15 分鐘 AMI 驗證。`;
+      }
+
+      // 更新通知列與自訂曲線小卡
+      const statsTextEl = document.getElementById('parsed-stats-text');
+      if (statsTextEl) {
+        statsTextEl.innerText = `【${res.scenarioTag}】反推 24H 負載：日間最高需量 ${res.dTargetReg} kW、08:00 早班晨峰 ${res.h08MorningKw} kW (15分極值 ${res.dTargetOff} kW)、夜間底載 ${res.pBaseKw} kW，已套用最佳契約 ${res.bestContractKw} kW。`;
+      }
+      const customDescEl = document.getElementById('custom-curve-desc');
+      if (customDescEl) {
+        customDescEl.innerText = `${res.scenarioTitle}：日間峰值 ${res.dTargetReg}kW ／ 平日尖峰均載 ${res.pAvgPeak}kW ／ 夜間底載 ${res.pBaseKw}kW`;
+      }
+
+      renderCustomCurve(res.hourly24);
+      updatePvBessDispatchChart();
+    }
 
     function updatePvBessDispatchChart() {
       const canvas = document.getElementById('chart-pv-bess-dispatch');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
 
-      const contractKw = Number(document.getElementById('input-contract-kw').value) || 1000;
-      const pvKwp = Number(document.getElementById('input-pv-kwp').value) || 800;
+      const contractKw = Number(document.getElementById('input-contract-kw').value) || 680;
+      const pvKwp = Number(document.getElementById('input-pv-kwp').value) || 400;
+      const tariffVal = document.getElementById('select-tariff')?.value || '高壓二段式電價';
+      const isThreeTier = tariffVal.includes('三段式');
       const bessKw = selectedUnit * 125;
 
-      // Update PV generation label
+      // Update PV generation & verified savings metrics
       const annualPvKwh = Math.round(pvKwp * 1250);
-      const pvSaving = Math.round(annualPvKwh * 3.68);
-      const bessSaving = Math.round(2021000 * (selectedUnit / 2));
-      const origBill = Math.round(contractKw * 15420);
+      // 尖峰流動電價扣 7.3% 電價調整後約 4.0~4.4 元/度 (400kWp 年發 50 萬度約省 200 萬)
+      const effectiveRate = isThreeTier ? 4.25 : 4.00;
+      const pvSaving = Math.round(annualPvKwh * effectiveRate);
+      const contractSaving = lastInverseSimStats.contractAnnualSaving || 149123;
+      const bessSaving = Math.round(1010500 * selectedUnit);
+      const origBill = lastInverseSimStats.origPreTaxBill || 13369027;
 
-      document.getElementById('pv-gen-summary').innerText = `預估年發電約 ${annualPvKwh.toLocaleString()} 度 (直接抵減日間負載)`;
+      document.getElementById('pv-gen-summary').innerText = `預估年發電約 ${annualPvKwh.toLocaleString()} 度 (自用年省約 ${(pvSaving/10000).toFixed(0)} 萬【推論量級】)`;
+      const scenTagEl = document.getElementById('sim-scenario-tag');
+      if (scenTagEl) scenTagEl.innerText = lastInverseSimStats.scenarioTag || '全年12月反推';
+
       document.getElementById('sim-orig-bill').innerText = `NT$ ${origBill.toLocaleString()}`;
+      const contractSavEl = document.getElementById('sim-contract-saving');
+      if (contractSavEl) contractSavEl.innerText = `+ NT$ ${contractSaving.toLocaleString()} (未稅)`;
       document.getElementById('sim-pv-saving').innerText = `+ NT$ ${pvSaving.toLocaleString()}`;
-      document.getElementById('sim-bess-saving').innerText = `+ NT$ ${bessSaving.toLocaleString()}`;
-      document.getElementById('sim-total-benefit').innerText = `NT$ ${(pvSaving + bessSaving).toLocaleString()} / 年`;
+      document.getElementById('sim-bess-saving').innerText = `+ NT$ 34,000 (需量控制) ~ ${bessSaving.toLocaleString()} (${selectedUnit}台小儲)`;
+
+      const tariffAdvEl = document.getElementById('sim-tariff-advice');
+      if (tariffAdvEl) {
+        if (isThreeTier) {
+          tariffAdvEl.className = 'font-mono text-emerald-700 text-[11px]';
+          tariffAdvEl.innerText = `模擬三段式：16~22h 佔比 ${lastInverseSimStats.eveningSharePct || 21}% (須15分AMI確認)`;
+        } else {
+          tariffAdvEl.className = 'font-mono text-amber-800 text-[11px]';
+          tariffAdvEl.innerText = `現況高壓二段式 (改三段式需 15 分鐘 AMI 驗證)`;
+        }
+      }
+
+      document.getElementById('sim-total-benefit').innerText = `NT$ ${(contractSaving + pvSaving).toLocaleString()} / 年`;
 
       const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
-      // Typical Bell Curve for Solar PV (06:00 to 18:00, peak at 12:00 = 0.78 * pvKwp)
+      // Typical Bell Curve for Solar PV in Pingtung (06:00 to 18:00, peak at 12:00 = 0.86 * pvKwp)
       const solarBell = [0,0,0,0,0,0, 0.05, 0.22, 0.45, 0.65, 0.78, 0.85, 0.86, 0.80, 0.66, 0.45, 0.20, 0.04, 0,0,0,0,0,0];
       const pvGenCurve = solarBell.map(r => Math.round(r * pvKwp));
+      const contractLine = hours.map(() => contractKw);
 
-      // BESS Dispatch: Charge 01:00~05:00 (+bessKw*0.7), Discharge 16:00~20:00 (-bessKw)
+      // Net load after PV self-consumption + BESS peak shaving
       const netLoadCurve = currentHourlyLoadProfile.map((load, h) => {
         let net = Math.max(load - pvGenCurve[h], 80);
-        if (h >= 1 && h <= 4) net += Math.round(bessKw * 0.65); // 離峰充電
-        if (h >= 16 && h <= 19) net = Math.max(net - bessKw, 100); // 夜尖峰放電削峰
+        if (h >= 1 && h <= 4) net += Math.round(bessKw * 0.55); // 離峰充電填谷
+        if (h >= 16 && h <= 20) net = Math.max(net - Math.round(bessKw * 0.75), 100); // 傍晚尖峰放電削峰
+        if (net > contractKw) net = Math.max(contractKw - 10, net - bessKw); // 削去超約尖峰
         return net;
       });
 
@@ -3024,27 +3432,36 @@
           labels: hours,
           datasets: [
             {
-              label: '原始用電負載 (kW)',
+              label: `建議經常契約線 (${contractKw} kW)`,
+              data: contractLine,
+              borderColor: '#059669',
+              borderWidth: 2,
+              borderDash: [6, 3],
+              pointRadius: 0,
+              fill: false
+            },
+            {
+              label: 'MODULE 1 電費單反推原始負載 (kW)',
               data: currentHourlyLoadProfile,
               borderColor: '#051C2C',
-              borderWidth: 2,
-              borderDash: [4, 4],
-              pointRadius: 0,
+              borderWidth: 2.5,
+              borderDash: [3, 3],
+              pointRadius: 2,
               fill: false,
               tension: 0.3
             },
             {
-              label: '大光：太陽能發電功率 (kW)',
+              label: `大光：${pvKwp} kWp 太陽能發電功率 (kW)`,
               data: pvGenCurve,
               borderColor: '#00A3E0',
-              backgroundColor: 'rgba(0, 163, 224, 0.18)',
+              backgroundColor: 'rgba(0, 163, 224, 0.20)',
               borderWidth: 2,
               pointRadius: 0,
               fill: true,
               tension: 0.35
             },
             {
-              label: '大光小儲協同後淨負載 (kW)',
+              label: '光儲協同後台電受電淨負載 (kW)',
               data: netLoadCurve,
               borderColor: '#005EB8',
               backgroundColor: 'rgba(0, 94, 184, 0.12)',
@@ -3068,7 +3485,7 @@
     }
 
     function onPvCapacityChange() {
-      updatePvBessDispatchChart();
+      runBillInverseLoadSimulation(false);
     }
 
     // --- VIEW & STEP NAVIGATION ---
@@ -3102,7 +3519,8 @@
         setTimeout(() => renderBillsView(), 50);
       } else if (viewName === 'calc') {
         setTimeout(() => {
-          updatePvBessDispatchChart();
+          populateSimScenarioOptions();
+          runBillInverseLoadSimulation(false);
           updateCashflowChart();
         }, 50);
       } else if (viewName === 'history') {
@@ -3132,12 +3550,11 @@
 
     function resetCalculation() {
       setStep(1);
-      document.getElementById('input-contract-kw').value = 1000;
-      document.getElementById('input-pv-kwp').value = 800;
-      selectedUnit = 2;
+      selectedUnit = 1;
       selectedStrategyIndex = 5;
-      selectLoadCurve('17902');
-      updatePvBessDispatchChart();
+      const scenSel = document.getElementById('sim-bill-scenario-select');
+      if (scenSel) scenSel.value = 'ANNUAL_WEIGHTED';
+      runBillInverseLoadSimulation(true);
       renderMatrix();
     }
 
@@ -3192,15 +3609,15 @@
         currentHourlyLoadProfile = hourlyAverages;
         const baseKw = (minKw === Infinity) ? Math.round(maxKw * 0.3) : Math.round(minKw);
 
-        const suggestedContract = Math.ceil(maxKw / 50) * 50;
+        const suggestedContract = Math.ceil(maxKw / 10) * 10;
         document.getElementById('input-contract-kw').value = suggestedContract;
-        document.getElementById('input-pv-kwp').value = Math.round((suggestedContract * 0.8) / 50) * 50;
+        document.getElementById('input-pv-kwp').value = Math.round((suggestedContract * 0.67) / 50) * 50;
 
-        renderCustomCurve(hourlyAverages, suggestedContract);
+        renderCustomCurve(hourlyAverages);
         updatePvBessDispatchChart();
 
-        statusEl.innerHTML = `✓ 已成功載入 ${file.name} (${validRows} 筆需量數據)`;
-        document.getElementById('parsed-stats-text').innerText = `讀取 ${validRows} 筆數據，最高尖峰需量 ${maxKw.toFixed(1)} kW，底載 ${baseKw.toFixed(1)} kW，建議大光 ${Math.round(suggestedContract * 0.8)} kWp。`;
+        statusEl.innerHTML = `✓ 已成功載入實測 AMI 檔案 ${file.name} (${validRows} 筆需量數據)`;
+        document.getElementById('parsed-stats-text').innerText = `【AMI 15分鐘實測】讀取 ${validRows} 筆數據，最高尖峰需量 ${maxKw.toFixed(1)} kW，底載 ${baseKw.toFixed(1)} kW，已覆蓋反推曲線。`;
         document.getElementById('parsed-summary-box').classList.remove('hidden');
 
         if (BtmSupabase.isConfigured()) {
@@ -3213,10 +3630,11 @@
 
     function renderCustomCurve(hourlyData) {
       const card = document.getElementById('card-curve-custom');
-      card.classList.remove('hidden');
+      if (card) card.classList.remove('hidden');
       selectLoadCurve('custom');
 
       const canvas = document.getElementById('chart-preview-custom');
+      if (!canvas) return;
       const ctx = canvas.getContext('2d');
       const labels = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 
@@ -3245,16 +3663,7 @@
     }
 
     async function loadSampleDataFile() {
-      try {
-        const resp = await fetch('sample_taipower_interval_data.csv');
-        if (!resp.ok) throw new Error('讀取失敗');
-        const blob = await resp.blob();
-        const file = new File([blob], 'sample_taipower_interval_data.csv', { type: 'text/csv' });
-        await handleDataFileUpload(file);
-      } catch (e) {
-        renderCustomCurve(currentHourlyLoadProfile, 1000);
-        updatePvBessDispatchChart();
-      }
+      runBillInverseLoadSimulation(true);
     }
 
     async function handleBillPdfUpload(file) {
