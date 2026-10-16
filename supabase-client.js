@@ -380,12 +380,12 @@ const BtmSupabase = {
       contact_name: proposalData.contact_name || '',
       contact_email: proposalData.contact_email || '',
       industry: proposalData.industry || '(254)金屬加工處理業',
-      tariff: proposalData.tariff || '高壓二段式電價',
+      tariff: proposalData.tariff || '高壓電力 二段式時間電價',
       contract_kw: Number(proposalData.contract_kw) || 600,
-      new_contract_kw: Number(proposalData.new_contract_kw) || null,
-      pv_capacity_kwp: Number(proposalData.pv_capacity_kwp) || 500,
-      selected_units: Number(proposalData.selected_units) || 1,
-      selected_strategy: proposalData.selected_strategy || '電價套利-日選2h-即時聚合',
+      new_contract_kw: Number(proposalData.best_contract_kw || proposalData.new_contract_kw) || 680,
+      pv_capacity_kwp: Number(proposalData.pv_capacity_kwp) || 400,
+      selected_units: Number(proposalData.selected_units) || 0,
+      selected_strategy: proposalData.selected_strategy || 'A2 契約調至 680kW ＋ D 太陽能 400kWp 自用',
       irr: Number(proposalData.irr) || null,
       roi: Number(proposalData.roi) || null,
       payback_years: Number(proposalData.payback_years) || null,
@@ -397,17 +397,53 @@ const BtmSupabase = {
       file_name: proposalData.file_name || null,
       file_size: proposalData.file_size || null,
       raw_payload: proposalData.raw_payload || {},
-      raw_result: proposalData.raw_result || {},
+      raw_result: {
+        customer_code: proposalData.customer_code,
+        electric_no: proposalData.electric_no,
+        tax_id: proposalData.tax_id,
+        address: proposalData.address,
+        best_contract_kw: proposalData.best_contract_kw,
+        contract_annual_savings: proposalData.contract_annual_savings,
+        max_demand_kw: proposalData.max_demand_kw,
+        max_off_demand_kw: proposalData.max_off_demand_kw,
+        over_contract_months: proposalData.over_contract_months,
+        bill_months_count: proposalData.bill_months_count,
+        billing_period_range: proposalData.billing_period_range,
+        annual_kwh: proposalData.annual_kwh,
+        annual_basic_fee: proposalData.annual_basic_fee,
+        annual_energy_fee: proposalData.annual_energy_fee,
+        annual_penalty_fee: proposalData.annual_penalty_fee,
+        annual_pf_adj: proposalData.annual_pf_adj,
+        annual_rate_adj: proposalData.annual_rate_adj,
+        annual_pretax_fee: proposalData.annual_pretax_fee,
+        annual_total_fee: proposalData.annual_total_fee,
+        load_factor_pct: proposalData.load_factor_pct,
+        avg_kw: proposalData.avg_kw,
+        peak_Share_pct: proposalData.peak_Share_pct,
+        sat_share_pct: proposalData.sat_share_pct,
+        off_share_pct: proposalData.off_share_pct,
+        pv_est_savings: proposalData.pv_est_savings,
+        dossier_markdown: proposalData.dossier_markdown,
+        backtest_options: proposalData.backtest_options,
+        monthly_demands_str: proposalData.monthly_demands_str
+      },
       created_by: proposalData.created_by || (this.currentUser ? this.currentUser.email : '進金生業務團隊')
     };
 
     const localHistory = JSON.parse(localStorage.getItem('BTM_CALC_HISTORY') || '[]');
     const localItem = {
-      id: 'local_' + Date.now(),
-      created_at: new Date().toISOString(),
+      id: proposalData.id || ('local_' + Date.now()),
+      created_at: proposalData.created_at || new Date().toISOString(),
+      ...proposalData,
       ...payload
     };
-    localHistory.unshift(localItem);
+
+    const existIdx = localHistory.findIndex(x => x.id === localItem.id || x.company_name === localItem.company_name);
+    if (existIdx >= 0) {
+      localHistory[existIdx] = { ...localHistory[existIdx], ...localItem };
+    } else {
+      localHistory.unshift(localItem);
+    }
     localStorage.setItem('BTM_CALC_HISTORY', JSON.stringify(localHistory.slice(0, 100)));
 
     if (this.isConfigured() && this.client) {
@@ -420,7 +456,7 @@ const BtmSupabase = {
         if (error) {
           return { success: true, cloud: false, local: true, data: localItem, error: error.message };
         }
-        return { success: true, cloud: true, local: true, data: data[0] };
+        return { success: true, cloud: true, local: true, data: { ...localItem, ...(data[0] || {}) } };
       } catch (err) {
         return { success: true, cloud: false, local: true, data: localItem, error: err.message };
       }
@@ -440,7 +476,10 @@ const BtmSupabase = {
           .limit(100);
 
         if (!error && data) {
-          cloudProposals = data;
+          cloudProposals = data.map(row => ({
+            ...(row.raw_result || {}),
+            ...row
+          }));
         }
       } catch (e) {
         console.warn("Load cloud proposals failed, using local:", e);
@@ -455,7 +494,7 @@ const BtmSupabase = {
   },
 
   async deleteProposal(id) {
-    if (this.isConfigured() && this.client && typeof id === 'string' && !id.startsWith('local_')) {
+    if (this.isConfigured() && this.client && typeof id === 'string' && !id.startsWith('local_') && !id.startsWith('prop_')) {
       try {
         await this.client.from('btm_proposals').delete().eq('id', id);
       } catch (e) {
