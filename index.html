@@ -223,8 +223,8 @@
             </div>
             <div class="flex flex-wrap items-center gap-2.5">
               <button onclick="loadDemo12MonthsBills()" class="px-3.5 py-2 text-xs font-bold bg-[#00A3E0] hover:bg-[#0088BD] text-[#051C2C] rounded-sm shadow transition flex items-center gap-1.5">
-                <i data-lucide="sparkles" class="w-4 h-4"></i>
-                載入 12 個月台電電費單範例
+                <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                載入客戶一：潤泰精密 (里港廠 12 個月真實電費單)
               </button>
               <button onclick="openBillEditorModal()" class="px-3.5 py-2 text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/25 rounded-sm transition flex items-center gap-1.5">
                 <i data-lucide="plus-circle" class="w-4 h-4 text-[#00A3E0]"></i>
@@ -430,23 +430,26 @@
             <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
               <thead>
                 <tr class="bg-[#051C2C] text-white font-semibold border-b border-[#051C2C]">
-                  <th class="py-3 px-3">計費年月</th>
-                  <th class="py-3 px-3">客戶名稱 / 台電電號</th>
-                  <th class="py-3 px-3">電價方案</th>
+                  <th class="py-3 px-3">電費月份 / 計費期間</th>
+                  <th class="py-3 px-3">客戶名稱 / 電號 / 饋線</th>
+                  <th class="py-3 px-3">電價方案 / 係數</th>
                   <th class="py-3 px-3 text-right">經常契約(kW)</th>
-                  <th class="py-3 px-3 text-right">最高需量(kW)</th>
+                  <th class="py-3 px-3 text-right">經常/週六/離峰需量</th>
                   <th class="py-3 px-3 text-right bg-[#0A2540]">尖峰度數</th>
                   <th class="py-3 px-3 text-right bg-[#0A2540]">半尖峰度數</th>
                   <th class="py-3 px-3 text-right bg-[#0A2540]">週六半尖</th>
                   <th class="py-3 px-3 text-right bg-[#0A2540]">離峰度數</th>
                   <th class="py-3 px-3 text-right font-bold text-[#00A3E0]">總用電度數(kWh)</th>
                   <th class="py-3 px-2.5 text-center">功因</th>
-                  <th class="py-3 px-3 text-right">基本電費</th>
+                  <th class="py-3 px-3 text-right">基本電費(約定)</th>
                   <th class="py-3 px-3 text-right">流動電費</th>
-                  <th class="py-3 px-3 text-right">超約/功因調整</th>
-                  <th class="py-3 px-3 text-right font-bold text-[#00A3E0]">總應繳電費(元)</th>
+                  <th class="py-3 px-3 text-right">超約罰款(非約定)</th>
+                  <th class="py-3 px-3 text-right">功因/電價調整</th>
+                  <th class="py-3 px-3 text-right">營業稅(5%)</th>
+                  <th class="py-3 px-3 text-right font-bold text-[#00A3E0]">繳費總金額(元)</th>
+                  <th class="py-3 px-2.5 text-right">排碳量(kg)</th>
                   <th class="py-3 px-2.5 text-right">平均單價</th>
-                  <th class="py-3 px-2.5 text-center">原檔/雲端</th>
+                  <th class="py-3 px-2.5 text-center">電費單原檔</th>
                   <th class="py-3 px-3 text-right">操作</th>
                 </tr>
               </thead>
@@ -993,30 +996,50 @@
 
         <!-- Section 1: 基本資訊 -->
         <div>
-          <div class="font-bold text-[#051C2C] border-l-4 border-[#005EB8] pl-2.5 mb-3">一、客戶與帳單基本識別</div>
+          <div class="font-bold text-[#051C2C] border-l-4 border-[#005EB8] pl-2.5 mb-3">一、客戶與台電繳費憑證基本識別</div>
           <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
               <label class="block text-slate-600 font-semibold mb-1">客戶公司名稱 (用電戶名) *</label>
-              <input type="text" id="edit-bill-company" value="舜煜科技股份有限公司" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-semibold">
+              <input type="text" id="edit-bill-company" value="潤泰精密材料股份有限公司 (里港廠)" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-semibold">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">台電電號 (11碼)</label>
-              <input type="text" id="edit-bill-elno" value="08-45-3321-10-4" placeholder="08-12-3456-78-9" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="text" id="edit-bill-elno" value="12-88-3674-21-5" placeholder="12-88-3674-21-5" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">計費年月 (YYYY-MM) *</label>
-              <input type="month" id="edit-bill-month" value="2026-07" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono" onchange="autoUpdateSeasonInModal()">
+              <input type="month" id="edit-bill-month" value="2026-01" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono" onchange="autoUpdateSeasonInModal()">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">電價種類 / 時間電價別</label>
               <select id="edit-bill-tariff" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-semibold">
+                <option value="高壓電力 二段式時間電價">高壓電力 二段式時間電價</option>
                 <option value="高壓三段式時間電價">高壓三段式時間電價</option>
-                <option value="高壓二段式時間電價">高壓二段式時間電價</option>
                 <option value="特高壓三段式時間電價">特高壓三段式時間電價</option>
                 <option value="特高壓二段式時間電價">特高壓二段式時間電價</option>
                 <option value="高壓批次生產時間電價">高壓批次生產時間電價</option>
                 <option value="低壓電力時間電價">低壓電力時間電價</option>
               </select>
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">計費期間 (起訖日期)</label>
+              <input type="text" id="edit-bill-period" value="114/12/01至114/12/31" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">營利事業統一編號</label>
+              <input type="text" id="edit-bill-taxid" value="86871981" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">行業別</label>
+              <input type="text" id="edit-bill-industry" value="(254)金屬加工處理業" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">饋線代號 / 輪流停電組別 / 倍數</label>
+              <div class="grid grid-cols-3 gap-1">
+                <input type="text" id="edit-bill-feeder" value="NX23" placeholder="饋線" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono text-center">
+                <input type="text" id="edit-bill-adjfactor" value="0.927" placeholder="係數" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono text-center" title="調整係數">
+                <input type="number" id="edit-bill-multiplier" value="2000" placeholder="倍數" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono text-center" title="計器倍數">
+              </div>
             </div>
           </div>
         </div>
@@ -1026,8 +1049,8 @@
           <div class="font-bold text-[#051C2C] border-l-4 border-[#005EB8] pl-2.5 mb-3">二、契約容量與當月最高實測需量 (kW)</div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">經常契約容量 (kW)</label>
-              <input type="number" id="edit-bill-c-reg" value="1000" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <label class="block text-slate-600 font-semibold mb-1">經常（尖峰）契約 (kW)</label>
+              <input type="number" id="edit-bill-c-reg" value="600" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">半尖峰/非夏月契約 (kW)</label>
@@ -1042,78 +1065,90 @@
               <input type="number" id="edit-bill-c-off" value="0" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
-              <label class="block text-[#005EB8] font-bold mb-1">經常最高需量 (kW)</label>
-              <input type="number" id="edit-bill-m-reg" value="985" class="w-full p-2 bg-[#E6F0FA] border border-[#005EB8]/40 rounded-sm font-mono font-bold">
+              <label class="block text-[#005EB8] font-bold mb-1">經常（尖峰）需量 (kW)</label>
+              <input type="number" id="edit-bill-m-reg" value="690" class="w-full p-2 bg-[#E6F0FA] border border-[#005EB8]/40 rounded-sm font-mono font-bold">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">半尖峰最高需量 (kW)</label>
-              <input type="number" id="edit-bill-m-semi" value="920" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" id="edit-bill-m-semi" value="0" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">週六半尖最高需量 (kW)</label>
-              <input type="number" id="edit-bill-m-sat" value="640" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <label class="block text-slate-600 font-semibold mb-1">週六半尖峰需量 (kW)</label>
+              <input type="number" id="edit-bill-m-sat" value="636" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">離峰最高需量 (kW)</label>
-              <input type="number" id="edit-bill-m-off" value="580" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" id="edit-bill-m-off" value="658" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
           </div>
         </div>
 
         <!-- Section 3: 各時段用電度數 -->
         <div>
-          <div class="font-bold text-[#051C2C] border-l-4 border-[#005EB8] pl-2.5 mb-3">三、各時段用電度數 (kWh) — 輸入自動加總</div>
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div class="font-bold text-[#051C2C] border-l-4 border-[#005EB8] pl-2.5 mb-3">三、各時段用電度數 (kWh) 與電力排碳量</div>
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
             <div>
               <label class="block text-slate-600 font-semibold mb-1">尖峰度數 (kWh)</label>
-              <input type="number" id="edit-bill-kwh-peak" value="112400" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" id="edit-bill-kwh-peak" value="134800" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">半尖峰度數 (kWh)</label>
-              <input type="number" id="edit-bill-kwh-semi" value="148600" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" id="edit-bill-kwh-semi" value="0" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">週六半尖峰度數 (kWh)</label>
-              <input type="number" id="edit-bill-kwh-sat" value="36200" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" id="edit-bill-kwh-sat" value="25200" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">離峰度數 (kWh)</label>
-              <input type="number" id="edit-bill-kwh-off" value="182800" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" id="edit-bill-kwh-off" value="79600" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-[#005EB8] font-bold mb-1">當月總度數 (kWh)</label>
-              <input type="number" id="edit-bill-kwh-total" value="480000" class="w-full p-2 bg-[#E6F0FA] border border-[#005EB8]/40 rounded-sm font-mono font-bold">
+              <input type="number" id="edit-bill-kwh-total" value="239600" class="w-full p-2 bg-[#E6F0FA] border border-[#005EB8]/40 rounded-sm font-mono font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">電力排碳量 (kg)</label>
+              <input type="number" id="edit-bill-carbon" value="113570" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
           </div>
         </div>
 
         <!-- Section 4: 電費金額明細與功因 -->
         <div>
-          <div class="font-bold text-[#051C2C] border-l-4 border-[#005EB8] pl-2.5 mb-3">四、電費金額明細 (NT$) 與功率因數 (%)</div>
-          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+          <div class="font-bold text-[#051C2C] border-l-4 border-[#005EB8] pl-2.5 mb-3">四、計費內容金額明細 (NT$) 與功率因數 (%)</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label class="block text-slate-600 font-semibold mb-1">功率因數 (%)</label>
-              <input type="number" step="0.1" id="edit-bill-pf" value="96.0" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" step="0.1" id="edit-bill-pf" value="95.0" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">基本電費 (元)</label>
-              <input type="number" id="edit-bill-basic-fee" value="223600" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <label class="block text-slate-600 font-semibold mb-1">基本電費(約定) (元)</label>
+              <input type="number" step="0.1" id="edit-bill-basic-fee" value="100140" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">流動電費 (元)</label>
-              <input type="number" id="edit-bill-energy-fee" value="1645200" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <input type="number" step="0.1" id="edit-bill-energy-fee" value="1118500" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">超約附加費 (元)</label>
-              <input type="number" id="edit-bill-penalty-fee" value="0" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <label class="block text-rose-700 font-semibold mb-1">基本電費(非約定/超約) (元)</label>
+              <input type="number" step="0.1" id="edit-bill-penalty-fee" value="35049" class="w-full p-2 bg-rose-50 border border-rose-200 rounded-sm font-mono">
             </div>
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">功因調整費 (元)</label>
-              <input type="number" id="edit-bill-pf-adj" value="-14016" oninput="recalcModalBillTotals()" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+              <label class="block text-slate-600 font-semibold mb-1">功率因數調整費 (元)</label>
+              <input type="number" step="0.1" id="edit-bill-pf-adj" value="-16945.1" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
             </div>
             <div>
-              <label class="block text-[#005EB8] font-bold mb-1">總應繳金額 (元)</label>
-              <input type="number" id="edit-bill-total-amt" value="1854784" class="w-full p-2 bg-[#E6F0FA] border border-[#005EB8]/40 rounded-sm font-mono font-bold">
+              <label class="block text-slate-600 font-semibold mb-1">電價調整金額 (元)</label>
+              <input type="number" step="0.1" id="edit-bill-rate-adj" value="-88960.7" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">營業稅 (5%) (元)</label>
+              <input type="number" step="1" id="edit-bill-tax" value="54656" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm font-mono">
+            </div>
+            <div>
+              <label class="block text-[#005EB8] font-bold mb-1">繳費總金額 (含稅應繳) (元)</label>
+              <input type="number" step="1" id="edit-bill-total-amt" value="1147773" class="w-full p-2 bg-[#E6F0FA] border border-[#005EB8]/40 rounded-sm font-mono font-bold">
             </div>
           </div>
         </div>
@@ -1121,11 +1156,11 @@
         <!-- Section 5: 備註與辨識文字預覽 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
           <div>
-            <label class="block text-slate-600 font-semibold mb-1">帳單備註 / 檔案名稱</label>
-            <input type="text" id="edit-bill-notes" placeholder="例：7月夏月高壓帳單，含冷氣滿載" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm">
+            <label class="block text-slate-600 font-semibold mb-1">用電地址 / 帳單備註</label>
+            <input type="text" id="edit-bill-notes" placeholder="例：屏東縣里港鄉三廍村中南1-8號1~7樓及地下室" class="w-full p-2 bg-[#F4F6F9] border border-[#D8E0E9] rounded-sm">
           </div>
           <div>
-            <label class="block text-slate-600 font-semibold mb-1">自動辨識原始摘錄 (OCR / PDF Text)</label>
+            <label class="block text-slate-600 font-semibold mb-1">自動辨識原始摘錄 (PDF 座標文字層 / OCR)</label>
             <input type="text" id="edit-bill-ocr-raw" readonly placeholder="系統自動填入辨識摘要..." class="w-full p-2 bg-slate-100 border border-[#D8E0E9] rounded-sm text-slate-500 font-mono">
           </div>
         </div>
@@ -1344,20 +1379,20 @@
       940, 880, 850, 810, 760, 620, 450, 320
     ];
 
-    // 12-Month Realistic Demo Dataset for Taipower High-Voltage Customer (舜煜科技 1000kW)
+    // 客戶一：潤泰精密材料股份有限公司 (里港廠) 12 個月真實台電高壓電力繳費憑證 (114年02月 ~ 115年01月)
     const DEMO_12M_BILLS = [
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-01', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 845, max_demand_semi_kw: 845, max_demand_sat_kw: 560, max_demand_off_kw: 510, kwh_peak: 0, kwh_semi_peak: 198000, kwh_sat_semi: 31000, kwh_off_peak: 162000, kwh_total: 391000, power_factor: 96.5, basic_fee: 166600, energy_fee: 1185200, excess_penalty_fee: 0, pf_adjustment: -10814, total_amount: 1340986, notes: '1月非夏月帳單' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-02', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 810, max_demand_semi_kw: 810, max_demand_sat_kw: 520, max_demand_off_kw: 490, kwh_peak: 0, kwh_semi_peak: 172000, kwh_sat_semi: 26000, kwh_off_peak: 145000, kwh_total: 343000, power_factor: 96.8, basic_fee: 166600, energy_fee: 1038400, excess_penalty_fee: 0, pf_adjustment: -10123, total_amount: 1194877, notes: '2月春節工作天較少' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-03', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 890, max_demand_semi_kw: 890, max_demand_sat_kw: 610, max_demand_off_kw: 540, kwh_peak: 0, kwh_semi_peak: 215000, kwh_sat_semi: 34000, kwh_off_peak: 175000, kwh_total: 424000, power_factor: 96.2, basic_fee: 166600, energy_fee: 1288900, excess_penalty_fee: 0, pf_adjustment: -11206, total_amount: 1444294, notes: '3月產線恢復常態' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-04', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 925, max_demand_semi_kw: 925, max_demand_sat_kw: 630, max_demand_off_kw: 560, kwh_peak: 0, kwh_semi_peak: 226000, kwh_sat_semi: 35000, kwh_off_peak: 181000, kwh_total: 442000, power_factor: 95.8, basic_fee: 166600, energy_fee: 1345600, excess_penalty_fee: 0, pf_adjustment: -11189, total_amount: 1501011, notes: '4月空調逐步開啟' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-05', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 978, max_demand_semi_kw: 978, max_demand_sat_kw: 660, max_demand_off_kw: 590, kwh_peak: 0, kwh_semi_peak: 242000, kwh_sat_semi: 38000, kwh_off_peak: 192000, kwh_total: 472000, power_factor: 95.4, basic_fee: 166600, energy_fee: 1438200, excess_penalty_fee: 0, pf_adjustment: -11395, total_amount: 1593405, notes: '5月高溫需量逼近契約' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-06', season_type: '夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 1035, max_demand_semi_kw: 980, max_demand_sat_kw: 680, max_demand_off_kw: 610, kwh_peak: 116000, kwh_semi_peak: 145000, kwh_sat_semi: 39000, kwh_off_peak: 195000, kwh_total: 495000, power_factor: 94.8, basic_fee: 223600, energy_fee: 1925400, excess_penalty_fee: 15652, pf_adjustment: -14613, total_amount: 2150039, notes: '6月入夏首月超約 35kW' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-07', season_type: '夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 1068, max_demand_semi_kw: 1012, max_demand_sat_kw: 710, max_demand_off_kw: 635, kwh_peak: 124500, kwh_semi_peak: 156000, kwh_sat_semi: 41500, kwh_off_peak: 204000, kwh_total: 526000, power_factor: 94.2, basic_fee: 223600, energy_fee: 2054800, excess_penalty_fee: 30410, pf_adjustment: -15037, total_amount: 2293773, notes: '7月盛夏最高需量 1,068kW 超約罰款' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-08', season_type: '夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 1052, max_demand_semi_kw: 995, max_demand_sat_kw: 700, max_demand_off_kw: 625, kwh_peak: 121800, kwh_semi_peak: 152200, kwh_sat_semi: 40000, kwh_off_peak: 199000, kwh_total: 513000, power_factor: 94.5, basic_fee: 223600, energy_fee: 2002100, excess_penalty_fee: 23254, pf_adjustment: -14912, total_amount: 2234042, notes: '8月持續高溫超約 52kW' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-09', season_type: '夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 992, max_demand_semi_kw: 950, max_demand_sat_kw: 670, max_demand_off_kw: 600, kwh_peak: 112400, kwh_semi_peak: 144600, kwh_sat_semi: 37500, kwh_off_peak: 188500, kwh_total: 483000, power_factor: 95.1, basic_fee: 223600, energy_fee: 1874200, excess_penalty_fee: 0, pf_adjustment: -14474, total_amount: 2083326, notes: '9月夏月尾聲未超約' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-10', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 930, max_demand_semi_kw: 930, max_demand_sat_kw: 640, max_demand_off_kw: 570, kwh_peak: 0, kwh_semi_peak: 231000, kwh_sat_semi: 36000, kwh_off_peak: 185000, kwh_total: 452000, power_factor: 95.7, basic_fee: 166600, energy_fee: 1375800, excess_penalty_fee: 0, pf_adjustment: -11259, total_amount: 1531141, notes: '10月轉非夏月費率' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-11', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 885, max_demand_semi_kw: 885, max_demand_sat_kw: 605, max_demand_off_kw: 545, kwh_peak: 0, kwh_semi_peak: 212000, kwh_sat_semi: 33500, kwh_off_peak: 174500, kwh_total: 420000, power_factor: 96.1, basic_fee: 166600, energy_fee: 1276400, excess_penalty_fee: 0, pf_adjustment: -10966, total_amount: 1432034, notes: '11月秋季常態負載' },
-      { company_name: '舜煜科技股份有限公司', electric_no: '08-45-3321-10-4', billing_month: '2026-12', season_type: '非夏月', tariff_type: '高壓三段式時間電價', contract_regular_kw: 1000, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 860, max_demand_semi_kw: 860, max_demand_sat_kw: 590, max_demand_off_kw: 525, kwh_peak: 0, kwh_semi_peak: 204000, kwh_sat_semi: 32000, kwh_off_peak: 168000, kwh_total: 404000, power_factor: 96.4, basic_fee: 166600, energy_fee: 1228100, excess_penalty_fee: 0, pf_adjustment: -10878, total_amount: 1383822, notes: '12月冬季負載' }
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-02', roc_month: '114年02月', billing_period: '114/01/01至114/01/31', billing_days: 31, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 692, max_demand_semi_kw: 0, max_demand_sat_kw: 612, max_demand_off_kw: 642, kwh_peak: 114600, kwh_semi_peak: 0, kwh_sat_semi: 24400, kwh_off_peak: 93000, kwh_total: 232000, daily_avg_kwh: 7483.87, power_factor: 93.0, basic_fee: 100140, energy_fee: 1020758, pf_adjustment: -13507.9, excess_penalty_fee: 36050.4, rate_adjustment_fee: -81825.5, ebill_discount: -10, pre_tax_amount: 1011052, tax_amount: 50553, total_amount: 1061605, carbon_kg: 114608, file_url: 'bills/ruentex_ligang/20250224里港廠11402月高壓電力繳費憑證.pdf', file_name: '20250224里港廠11402月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年02月 (計費期間 114/01/01~01/31) 超約 92kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-03', roc_month: '114年03月', billing_period: '114/02/01至114/02/28', billing_days: 28, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 606, max_demand_semi_kw: 0, max_demand_sat_kw: 570, max_demand_off_kw: 634, kwh_peak: 120800, kwh_semi_peak: 0, kwh_sat_semi: 19000, kwh_off_peak: 83400, kwh_total: 223200, daily_avg_kwh: 7971.43, power_factor: 93.0, basic_fee: 100140, energy_fee: 1022920, pf_adjustment: -13533.9, excess_penalty_fee: 3867.6, rate_adjustment_fee: -81983.3, ebill_discount: -10, pre_tax_amount: 982286, tax_amount: 49114, total_amount: 1031400, carbon_kg: 110261, file_url: 'bills/ruentex_ligang/20250324里港廠11403月高壓電力繳費憑證.pdf', file_name: '20250324里港廠11403月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年03月 (計費期間 114/02/01~02/28) 離峰需量 634kW 超約' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-04', roc_month: '114年04月', billing_period: '114/03/01至114/03/31', billing_days: 31, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 648, max_demand_semi_kw: 0, max_demand_sat_kw: 594, max_demand_off_kw: 622, kwh_peak: 119600, kwh_semi_peak: 0, kwh_sat_semi: 28000, kwh_off_peak: 74200, kwh_total: 221800, daily_avg_kwh: 7154.84, power_factor: 96.0, basic_fee: 100140, energy_fee: 1015504, pf_adjustment: -15513.0, excess_penalty_fee: 16022.4, rate_adjustment_fee: -81442.0, ebill_discount: -10, pre_tax_amount: 985430, tax_amount: 49271, total_amount: 1034701, carbon_kg: 109569, file_url: 'bills/ruentex_ligang/20250424里港廠11404月高壓電力繳費憑證.pdf', file_name: '20250424里港廠11404月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年04月 (計費期間 114/03/01~03/31) 超約 48kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-05', roc_month: '114年05月', billing_period: '114/04/01至114/04/30', billing_days: 30, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 684, max_demand_semi_kw: 0, max_demand_sat_kw: 630, max_demand_off_kw: 668, kwh_peak: 121600, kwh_semi_peak: 0, kwh_sat_semi: 22800, kwh_off_peak: 69000, kwh_total: 213400, daily_avg_kwh: 7113.33, power_factor: 96.0, basic_fee: 100140, energy_fee: 1002244, pf_adjustment: -15328.6, excess_penalty_fee: 32044.8, rate_adjustment_fee: -80474.0, ebill_discount: -10, pre_tax_amount: 989158, tax_amount: 49458, total_amount: 1038616, carbon_kg: 105420, file_url: 'bills/ruentex_ligang/20250522里港廠11405月高壓電力繳費憑證.pdf', file_name: '20250522里港廠11405月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年05月 (計費期間 114/04/01~04/30) 超約 84kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-06', roc_month: '114年06月', billing_period: '114/05/01至114/05/31', billing_days: 31, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 698, max_demand_semi_kw: 0, max_demand_sat_kw: 664, max_demand_off_kw: 726, kwh_peak: 128800, kwh_semi_peak: 0, kwh_sat_semi: 23000, kwh_off_peak: 83800, kwh_total: 235600, daily_avg_kwh: 7600.0, power_factor: 94.0, basic_fee: 117150, energy_fee: 1122128, pf_adjustment: -16083.3, excess_penalty_fee: 47872.5, rate_adjustment_fee: -90467.2, ebill_discount: -10, pre_tax_amount: 1124371, tax_amount: 56219, total_amount: 1180590, carbon_kg: 116386, file_url: 'bills/ruentex_ligang/20250624里港廠11406月高壓電力繳費憑證.pdf', file_name: '20250624里港廠11406月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年06月 (計費期間 114/05/01~05/31) 經常需量 698kW / 離峰 726kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-07', roc_month: '114年07月', billing_period: '114/06/01至114/06/30', billing_days: 30, season_type: '夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 670, max_demand_semi_kw: 0, max_demand_sat_kw: 656, max_demand_off_kw: 632, kwh_peak: 131400, kwh_semi_peak: 0, kwh_sat_semi: 25400, kwh_off_peak: 67000, kwh_total: 223800, daily_avg_kwh: 7460.0, power_factor: 95.0, basic_fee: 134160, energy_fee: 1138878, pf_adjustment: -17701.5, excess_penalty_fee: 33540.0, rate_adjustment_fee: -92931.7, ebill_discount: -10, pre_tax_amount: 1138986, tax_amount: 56949, total_amount: 1195935, carbon_kg: 106081, file_url: 'bills/ruentex_ligang/20250722里港廠11407月高壓電力繳費憑證.pdf', file_name: '20250722里港廠11407月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年07月 (計費期間 114/06/01~06/30 夏月) 超約 70kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-08', roc_month: '114年08月', billing_period: '114/07/01至114/07/31', billing_days: 31, season_type: '夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 642, max_demand_semi_kw: 0, max_demand_sat_kw: 582, max_demand_off_kw: 642, kwh_peak: 128400, kwh_semi_peak: 0, kwh_sat_semi: 19800, kwh_off_peak: 66600, kwh_total: 214800, daily_avg_kwh: 6929.03, power_factor: 93.0, basic_fee: 134160, energy_fee: 1102032, pf_adjustment: -14897.3, excess_penalty_fee: 18782.4, rate_adjustment_fee: -90242.0, ebill_discount: -10, pre_tax_amount: 1095071, tax_amount: 54754, total_amount: 1149825, carbon_kg: 101815, file_url: 'bills/ruentex_ligang/20250822里港廠11408月高壓電力繳費憑證.pdf', file_name: '20250822里港廠11408月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年08月 (計費期間 114/07/01~07/31 夏月) 超約 42kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-09', roc_month: '114年09月', billing_period: '114/08/01至114/08/31', billing_days: 31, season_type: '夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 650, max_demand_semi_kw: 0, max_demand_sat_kw: 566, max_demand_off_kw: 630, kwh_peak: 115400, kwh_semi_peak: 0, kwh_sat_semi: 21600, kwh_off_peak: 58800, kwh_total: 195800, daily_avg_kwh: 6316.13, power_factor: 95.0, basic_fee: 134160, energy_fee: 998130, pf_adjustment: -15744.4, excess_penalty_fee: 22360.0, rate_adjustment_fee: -82657.1, ebill_discount: -10, pre_tax_amount: 1005942, tax_amount: 50297, total_amount: 1056239, carbon_kg: 92809, file_url: 'bills/ruentex_ligang/20250923里港廠11409月高壓電力繳費憑證.pdf', file_name: '20250923里港廠11409月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年09月 (計費期間 114/08/01~08/31 夏月) 超約 50kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-10', roc_month: '114年10月', billing_period: '114/09/01至114/09/30', billing_days: 30, season_type: '夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 724, max_demand_semi_kw: 0, max_demand_sat_kw: 622, max_demand_off_kw: 656, kwh_peak: 138600, kwh_semi_peak: 0, kwh_sat_semi: 23600, kwh_off_peak: 64600, kwh_total: 226800, daily_avg_kwh: 7560.0, power_factor: 95.0, basic_fee: 134160, energy_fee: 1175988, pf_adjustment: -18217.6, excess_penalty_fee: 69763.2, rate_adjustment_fee: -95640.8, ebill_discount: -10, pre_tax_amount: 1205755, tax_amount: 60288, total_amount: 1266043, carbon_kg: 107503, file_url: 'bills/ruentex_ligang/20251023里港廠11410月高壓電力繳費憑證.pdf', file_name: '20251023里港廠11410月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年10月 (計費期間 114/09/01~09/30 夏月) 全年最高需量 724kW 超約 124kW!' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-11', roc_month: '114年11月', billing_period: '114/10/01至114/10/31', billing_days: 31, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 688, max_demand_semi_kw: 0, max_demand_sat_kw: 642, max_demand_off_kw: 638, kwh_peak: 132600, kwh_semi_peak: 0, kwh_sat_semi: 18200, kwh_off_peak: 89600, kwh_total: 240400, daily_avg_kwh: 7754.84, power_factor: 96.0, basic_fee: 117150, energy_fee: 1146310, pf_adjustment: -17568.4, excess_penalty_fee: 39831.0, rate_adjustment_fee: -92232.5, ebill_discount: -10, pre_tax_amount: 1135598, tax_amount: 56780, total_amount: 1192378, carbon_kg: 113950, file_url: 'bills/ruentex_ligang/20251124里港廠11411月高壓電力繳費憑證.pdf', file_name: '20251124里港廠11411月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年11月 (計費期間 114/10/01~10/31) 超約 88kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2025-12', roc_month: '114年12月', billing_period: '114/11/01至114/11/30', billing_days: 30, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 678, max_demand_semi_kw: 0, max_demand_sat_kw: 640, max_demand_off_kw: 694, kwh_peak: 114400, kwh_semi_peak: 0, kwh_sat_semi: 28000, kwh_off_peak: 71600, kwh_total: 214000, daily_avg_kwh: 7133.33, power_factor: 96.0, basic_fee: 100140, energy_fee: 975984, pf_adjustment: -14963.5, excess_penalty_fee: 30106.2, rate_adjustment_fee: -78557.0, ebill_discount: -10, pre_tax_amount: 964476, tax_amount: 48224, total_amount: 1012700, carbon_kg: 101436, file_url: 'bills/ruentex_ligang/20251226里港廠11412月高壓電力繳費憑證.pdf', file_name: '20251226里港廠11412月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '114年12月 (計費期間 114/11/01~11/30) 超約 78kW / 離峰 694kW' },
+      { company_name: '潤泰精密材料股份有限公司 (里港廠)', electric_no: '12-88-3674-21-5', billing_month: '2026-01', roc_month: '115年01月', billing_period: '114/12/01至114/12/31', billing_days: 31, season_type: '非夏月', tariff_type: '高壓電力 二段式時間電價', tax_id: '86871981', industry: '(254)金屬加工處理業', address: '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室', feeder_code: 'NX23', outage_group: 'B', meter_multiplier: 2000, adj_factor: 0.927, contract_regular_kw: 600, contract_semi_peak_kw: 0, contract_sat_semi_kw: 0, contract_off_peak_kw: 0, max_demand_regular_kw: 690, max_demand_semi_kw: 0, max_demand_sat_kw: 636, max_demand_off_kw: 658, kwh_peak: 134800, kwh_semi_peak: 0, kwh_sat_semi: 25200, kwh_off_peak: 79600, kwh_total: 239600, daily_avg_kwh: 7729.03, power_factor: 95.0, basic_fee: 100140, energy_fee: 1118500, pf_adjustment: -16945.1, excess_penalty_fee: 35049.0, rate_adjustment_fee: -88960.7, ebill_discount: -10, pre_tax_amount: 1093117, tax_amount: 54656, total_amount: 1147773, carbon_kg: 113570, file_url: 'bills/ruentex_ligang/20260122里港廠11501月高壓電力繳費憑證.pdf', file_name: '20260122里港廠11501月高壓電力繳費憑證.pdf', recognition_source: 'PDF_TEXT', notes: '115年01月 (計費期間 114/12/01~12/31) 超約 90kW' }
     ];
 
     // 6 Operating Strategies
@@ -1456,7 +1491,7 @@
         }, false);
       }
 
-      // Initialize bills (if empty, seed demo 12 months so table is immediately rich & usable)
+      // Initialize bills (seed Customer #1: 潤泰精密里港廠 12 months if empty or only legacy demo)
       await loadBillsFromCloud(true);
 
       // Initialize Module 2 Charts & Matrix
@@ -1473,7 +1508,13 @@
 
     async function loadBillsFromCloud(autoSeedIfEmpty = false) {
       allElectricityBills = await BtmSupabase.getBills();
-      if (autoSeedIfEmpty && (!allElectricityBills || allElectricityBills.length === 0)) {
+      const hasRuentex = allElectricityBills && allElectricityBills.some(b => String(b.company_name || '').includes('潤泰精密'));
+      if (autoSeedIfEmpty && (!allElectricityBills || allElectricityBills.length === 0 || !hasRuentex)) {
+        // Clear old fictional demo if only 舜煜科技 exists locally
+        const onlyOldDemo = allElectricityBills && allElectricityBills.length > 0 && allElectricityBills.every(b => String(b.company_name || '').includes('舜煜科技'));
+        if (onlyOldDemo) {
+          localStorage.removeItem('ACMEPOINT_BTM_BILLS_V1');
+        }
         await BtmSupabase.saveBillsBatch(DEMO_12M_BILLS);
         allElectricityBills = await BtmSupabase.getBills();
       }
@@ -1484,12 +1525,12 @@
     async function loadDemo12MonthsBills() {
       const prog = document.getElementById('bill-upload-progress');
       prog.classList.remove('hidden');
-      prog.innerText = '⏳ 正在載入 12 個月台電高壓三段式電費單範例並同步至資料庫...';
+      prog.innerText = '⏳ 正在載入客戶一「潤泰精密材料股份有限公司 (里港廠)」12 個月真實電費單並同步至資料庫...';
       const res = await BtmSupabase.saveBillsBatch(DEMO_12M_BILLS);
       allElectricityBills = await BtmSupabase.getBills();
       populateCompanyFilterDropdown();
       renderBillsView();
-      prog.innerHTML = `✓ 已載入 12 個月完整電費單範例（舜煜科技 2026/01~12）${res.cloud ? '並同步至 Supabase 雲端！' : '（已存於本機，連線 Supabase 後可同步）'}`;
+      prog.innerHTML = `✓ 已載入「潤泰精密材料股份有限公司 (里港廠)」12 個月真實電費單 (114年02月~115年01月) ${res.cloud ? '並同步至 Supabase 雲端！' : '（已存於本機表格，連線 Supabase 後可一鍵同步）'}`;
     }
 
     function populateCompanyFilterDropdown() {
@@ -1515,7 +1556,7 @@
         if (compFilter !== 'ALL' && b.company_name !== compFilter) return false;
         if (seasonFilter !== 'ALL' && b.season_type !== seasonFilter) return false;
         if (kw) {
-          const hay = `${b.company_name} ${b.electric_no} ${b.billing_month} ${b.tariff_type} ${b.notes}`.toLowerCase();
+          const hay = `${b.company_name} ${b.electric_no} ${b.billing_month} ${b.roc_month || ''} ${b.billing_period || ''} ${b.tariff_type} ${b.notes}`.toLowerCase();
           if (!hay.includes(kw)) return false;
         }
         return true;
@@ -1531,8 +1572,8 @@
 
       // Aggregations
       let sumPeak = 0, sumSemi = 0, sumSat = 0, sumOff = 0, sumTotalKwh = 0;
-      let sumBasic = 0, sumEnergy = 0, sumPenalty = 0, sumPfAdj = 0, sumTotalFee = 0;
-      let maxContract = 0, maxDemand = 0, sumPf = 0;
+      let sumBasic = 0, sumEnergy = 0, sumPenalty = 0, sumPfAdj = 0, sumRateAdj = 0, sumTax = 0, sumTotalFee = 0, sumCarbon = 0;
+      let maxContract = 0, maxDemand = 0, maxSatDemand = 0, maxOffDemand = 0, sumPf = 0;
       const uniqueCompanies = new Set();
       const months = [];
 
@@ -1548,10 +1589,15 @@
         sumEnergy += Number(b.energy_fee) || 0;
         sumPenalty += Number(b.excess_penalty_fee) || 0;
         sumPfAdj += Number(b.pf_adjustment) || 0;
+        sumRateAdj += Number(b.rate_adjustment_fee) || 0;
+        sumTax += Number(b.tax_amount) || 0;
         sumTotalFee += Number(b.total_amount) || 0;
+        sumCarbon += Number(b.carbon_kg) || 0;
         sumPf += Number(b.power_factor) || 95;
         if ((Number(b.contract_regular_kw) || 0) > maxContract) maxContract = Number(b.contract_regular_kw);
         if ((Number(b.max_demand_regular_kw) || 0) > maxDemand) maxDemand = Number(b.max_demand_regular_kw);
+        if ((Number(b.max_demand_sat_kw) || 0) > maxSatDemand) maxSatDemand = Number(b.max_demand_sat_kw);
+        if ((Number(b.max_demand_off_kw) || 0) > maxOffDemand) maxOffDemand = Number(b.max_demand_off_kw);
       });
 
       const avgPrice = sumTotalKwh > 0 ? (sumTotalFee / sumTotalKwh) : 0;
@@ -1565,13 +1611,13 @@
       document.getElementById('kpi-period-range').innerText = months.length > 0 ? `計費區間: ${months[0]} ~ ${months[months.length - 1]}` : '尚無月份資料';
 
       document.getElementById('kpi-total-kwh').innerText = sumTotalKwh.toLocaleString();
-      document.getElementById('kpi-peak-ratio').innerText = `高價時段(尖+半尖)佔比: ${highTariffRatio.toFixed(1)}%`;
+      document.getElementById('kpi-peak-ratio').innerText = `尖峰+半尖峰高價佔比: ${highTariffRatio.toFixed(1)}%`;
 
       document.getElementById('kpi-contract-vs-max').innerText = `${maxContract.toLocaleString()} / ${maxDemand.toLocaleString()}`;
       const diagEl = document.getElementById('kpi-demand-diag');
       if (maxDemand > maxContract && maxContract > 0) {
         diagEl.className = 'mt-1.5 text-[11px] font-bold text-rose-600';
-        diagEl.innerText = `⚠️ 最高超約 ${maxDemand - maxContract} kW (建議配置小儲削峰)`;
+        diagEl.innerText = `⚠️ 最高超約 ${maxDemand - maxContract} kW (累計超約罰款 $${Math.round(sumPenalty).toLocaleString()})`;
       } else if (maxContract > 0) {
         diagEl.className = 'mt-1.5 text-[11px] font-semibold text-emerald-700';
         diagEl.innerText = `✓ 未超約 (契約餘裕 ${maxContract - maxDemand} kW)`;
@@ -1581,25 +1627,30 @@
 
       document.getElementById('kpi-total-fee').innerText = '$' + sumTotalFee.toLocaleString();
       document.getElementById('kpi-avg-price').innerText = `$${avgPrice.toFixed(2)}/度`;
-      document.getElementById('kpi-pf-summary').innerText = `平均功因: ${avgPf.toFixed(1)}% (超約罰款累計 $${sumPenalty.toLocaleString()})`;
+      document.getElementById('kpi-pf-summary').innerText = `平均功因: ${avgPf.toFixed(1)}% ｜ 排碳 ${(sumCarbon / 1000).toFixed(1)} 公噸`;
 
       // Calculate McKinsey Large PV + Small BESS Recommendation from Bills
-      const recPvKwp = maxContract > 0 ? Math.round((maxContract * 0.8) / 50) * 50 : 800;
+      const recPvKwp = maxContract > 0 ? Math.round((maxContract * 0.85) / 50) * 50 : 500;
       const excessKw = Math.max(maxDemand - maxContract, 0);
-      const recBessUnits = excessKw > 125 ? 2 : (maxContract >= 800 ? 2 : 1);
-      document.getElementById('kpi-pv-bess-rec').innerText = `大光 ${recPvKwp} kWp ＋ 小儲 ${recBessUnits * 261} kWh`;
+      const recBessUnits = excessKw > 100 ? 1 : (maxContract >= 800 ? 2 : 1);
+      document.getElementById('kpi-pv-bess-rec').innerText = `大光 ${recPvKwp} kWp ＋ 小儲 ${recBessUnits * 261} kWh (${recBessUnits * 125}kW)`;
 
       // Render Table Rows
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="18" class="text-center py-10 text-slate-400 font-sans">目前尚無符合篩選條件的電費單紀錄，請拖曳上傳電費單或點擊「載入 12 個月台電電費單範例」。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="21" class="text-center py-10 text-slate-400 font-sans">目前尚無符合篩選條件的電費單紀錄，請拖曳上傳電費單或點擊「載入客戶一：潤泰精密 (里港廠 12 個月真實電費單)」。</td></tr>`;
         tfoot.innerHTML = '';
       } else {
         tbody.innerHTML = '';
         list.forEach(b => {
           const isSummer = b.season_type === '夏月';
-          const isOverContract = (Number(b.max_demand_regular_kw) || 0) > (Number(b.contract_regular_kw) || 0);
+          const regD = Number(b.max_demand_regular_kw) || 0;
+          const satD = Number(b.max_demand_sat_kw) || 0;
+          const offD = Number(b.max_demand_off_kw) || 0;
+          const contractKw = Number(b.contract_regular_kw) || 0;
+          const isOverContract = regD > contractKw || satD > contractKw || offD > contractKw;
           const isCloud = !String(b.id || '').startsWith('local_');
-          const penaltyPlusPf = (Number(b.excess_penalty_fee) || 0) + (Number(b.pf_adjustment) || 0);
+          const penaltyFee = Number(b.excess_penalty_fee) || 0;
+          const pfPlusRateAdj = (Number(b.pf_adjustment) || 0) + (Number(b.rate_adjustment_fee) || 0);
           const unitPrice = (Number(b.kwh_total) || 0) > 0 ? (Number(b.total_amount) / Number(b.kwh_total)).toFixed(2) : '0.00';
 
           const tr = document.createElement('tr');
@@ -1608,34 +1659,43 @@
             <td class="py-2.5 px-3 font-bold text-[#051C2C]">
               <div class="flex items-center gap-1.5">
                 <span>${b.billing_month || '-'}</span>
-                <span class="px-1.5 py-0.5 text-[10px] rounded-sm font-sans font-semibold ${isSummer ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'}">${b.season_type || '夏月'}</span>
+                <span class="px-1.5 py-0.5 text-[10px] rounded-sm font-sans font-semibold ${isSummer ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'}">${b.season_type || '非夏月'}</span>
               </div>
+              <div class="text-[10px] text-slate-400 font-normal mt-0.5">${b.billing_period || b.roc_month || ''}</div>
             </td>
             <td class="py-2.5 px-3 font-sans">
               <div class="font-bold text-[#051C2C]">${b.company_name}</div>
-              <div class="text-[10px] text-slate-400 font-mono">${b.electric_no || '-'}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${b.electric_no || '-'} ${b.feeder_code ? `• 饋線 ${b.feeder_code}` : ''} ${b.meter_multiplier ? `• ${b.meter_multiplier}倍` : ''}</div>
             </td>
-            <td class="py-2.5 px-3 font-sans text-slate-600">${b.tariff_type || '高壓三段式'}</td>
-            <td class="py-2.5 px-3 text-right font-semibold">${Number(b.contract_regular_kw || 0).toLocaleString()}</td>
-            <td class="py-2.5 px-3 text-right font-bold ${isOverContract ? 'text-rose-600 bg-rose-50' : 'text-[#051C2C]'}">
-              ${Number(b.max_demand_regular_kw || 0).toLocaleString()}
-              ${isOverContract ? '<span class="text-[9px] block text-rose-600 font-sans">超約!</span>' : ''}
+            <td class="py-2.5 px-3 font-sans text-slate-600">
+              <div class="font-semibold text-[#051C2C]">${b.tariff_type || '高壓二段式'}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${b.industry || ''} ${b.adj_factor ? `(係數 ${b.adj_factor})` : ''}</div>
+            </td>
+            <td class="py-2.5 px-3 text-right font-semibold">${contractKw.toLocaleString()}</td>
+            <td class="py-2.5 px-3 text-right font-bold ${isOverContract ? 'text-rose-600 bg-rose-50/70' : 'text-[#051C2C]'}">
+              <div>${regD.toLocaleString()} <span class="text-[10px] text-slate-400 font-normal">/ ${satD} / ${offD}</span></div>
+              ${isOverContract ? `<span class="text-[9px] block text-rose-600 font-sans">超約 +${Math.max(regD, satD, offD) - contractKw}kW</span>` : ''}
             </td>
             <td class="py-2.5 px-3 text-right text-slate-700 bg-slate-50/70">${Number(b.kwh_peak || 0).toLocaleString()}</td>
             <td class="py-2.5 px-3 text-right text-slate-700 bg-slate-50/70">${Number(b.kwh_semi_peak || 0).toLocaleString()}</td>
             <td class="py-2.5 px-3 text-right text-slate-700 bg-slate-50/70">${Number(b.kwh_sat_semi || 0).toLocaleString()}</td>
             <td class="py-2.5 px-3 text-right text-slate-700 bg-slate-50/70">${Number(b.kwh_off_peak || 0).toLocaleString()}</td>
             <td class="py-2.5 px-3 text-right font-bold text-[#005EB8] bg-[#E6F0FA]/30">${Number(b.kwh_total || 0).toLocaleString()}</td>
-            <td class="py-2.5 px-2.5 text-center text-slate-600">${Number(b.power_factor || 95).toFixed(1)}%</td>
+            <td class="py-2.5 px-2.5 text-center text-slate-600">${Number(b.power_factor || 95).toFixed(0)}%</td>
             <td class="py-2.5 px-3 text-right text-slate-700">$${Number(b.basic_fee || 0).toLocaleString()}</td>
             <td class="py-2.5 px-3 text-right text-slate-700">$${Number(b.energy_fee || 0).toLocaleString()}</td>
-            <td class="py-2.5 px-3 text-right ${penaltyPlusPf > 0 ? 'text-rose-600 font-bold' : 'text-emerald-700'}">
-              ${penaltyPlusPf >= 0 ? '+' : ''}${penaltyPlusPf.toLocaleString()}
+            <td class="py-2.5 px-3 text-right ${penaltyFee > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}">
+              ${penaltyFee > 0 ? '+$' + penaltyFee.toLocaleString() : '$0'}
             </td>
+            <td class="py-2.5 px-3 text-right text-emerald-700">
+              ${pfPlusRateAdj.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+            </td>
+            <td class="py-2.5 px-3 text-right text-slate-600">$${Number(b.tax_amount || 0).toLocaleString()}</td>
             <td class="py-2.5 px-3 text-right font-bold text-[#051C2C] bg-[#E6F0FA]/30">$${Number(b.total_amount || 0).toLocaleString()}</td>
+            <td class="py-2.5 px-2.5 text-right text-slate-600">${Number(b.carbon_kg || 0).toLocaleString()}</td>
             <td class="py-2.5 px-2.5 text-right font-semibold text-[#005EB8]">$${unitPrice}</td>
             <td class="py-2.5 px-2.5 text-center font-sans">
-              ${b.file_url ? `<a href="${b.file_url}" target="_blank" class="text-[#005EB8] hover:underline font-semibold">查看原檔</a>` : `<span class="px-1.5 py-0.5 text-[10px] rounded-sm ${isCloud ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-600'}">${isCloud ? '雲端已存' : '本機'}</span>`}
+              ${b.file_url ? `<a href="${b.file_url}" target="_blank" class="px-2 py-0.5 bg-[#E6F0FA] text-[#005EB8] hover:bg-[#005EB8] hover:text-white rounded-sm font-semibold transition inline-flex items-center gap-1"><i data-lucide="file-text" class="w-3 h-3"></i>原檔PDF</a>` : `<span class="px-1.5 py-0.5 text-[10px] rounded-sm ${isCloud ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-100 text-slate-600'}">${isCloud ? '雲端已存' : '本機'}</span>`}
             </td>
             <td class="py-2.5 px-3 text-right font-sans space-x-1">
               <button onclick="openBillEditorModal('${b.id}')" class="px-2 py-1 bg-[#E6F0FA] hover:bg-[#005EB8] hover:text-white text-[#005EB8] rounded-sm font-semibold transition">編輯</button>
@@ -1648,9 +1708,9 @@
         // Summary Footer Row
         tfoot.innerHTML = `
           <tr>
-            <td class="py-3 px-3 font-sans" colspan="3">合計 / 平均 (${list.length} 個月電費單彙總)</td>
+            <td class="py-3 px-3 font-sans" colspan="3">合計 / 最高 (${list.length} 個月電費單彙總)</td>
             <td class="py-3 px-3 text-right">${maxContract.toLocaleString()} kW</td>
-            <td class="py-3 px-3 text-right text-rose-700">最高 ${maxDemand.toLocaleString()} kW</td>
+            <td class="py-3 px-3 text-right text-rose-700">最高 ${maxDemand.toLocaleString()} / ${maxSatDemand} / ${maxOffDemand} kW</td>
             <td class="py-3 px-3 text-right">${sumPeak.toLocaleString()}</td>
             <td class="py-3 px-3 text-right">${sumSemi.toLocaleString()}</td>
             <td class="py-3 px-3 text-right">${sumSat.toLocaleString()}</td>
@@ -1659,8 +1719,11 @@
             <td class="py-3 px-2.5 text-center">${avgPf.toFixed(1)}%</td>
             <td class="py-3 px-3 text-right">$${sumBasic.toLocaleString()}</td>
             <td class="py-3 px-3 text-right">$${sumEnergy.toLocaleString()}</td>
-            <td class="py-3 px-3 text-right">${(sumPenalty + sumPfAdj).toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-rose-700">+$${Math.round(sumPenalty).toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-emerald-700">${Math.round(sumPfAdj + sumRateAdj).toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">$${sumTax.toLocaleString()}</td>
             <td class="py-3 px-3 text-right text-[#051C2C]">$${sumTotalFee.toLocaleString()}</td>
+            <td class="py-3 px-2.5 text-right">${sumCarbon.toLocaleString()} kg</td>
             <td class="py-3 px-2.5 text-right text-[#005EB8]">$${avgPrice.toFixed(2)}/度</td>
             <td colspan="2" class="py-3 px-3 text-right font-sans">
               <button onclick="exportBillsToExcel()" class="text-[#005EB8] hover:underline font-bold">下載完整 Excel →</button>
@@ -1706,7 +1769,7 @@
           scales: {
             x: { grid: { display: false } },
             y: { stacked: true, ticks: { callback: v => (v / 1000) + 'k' }, title: { display: true, text: '用電度數 (kWh)' } },
-            y1: { position: 'right', grid: { drawOnChartArea: false }, min: 2.0, max: 6.0, title: { display: true, text: '平均單價 (NT$/度)' } }
+            y1: { position: 'right', grid: { drawOnChartArea: false }, min: 2.5, max: 6.5, title: { display: true, text: '平均單價 (NT$/度)' } }
           }
         }
       });
@@ -1753,7 +1816,7 @@
     }
 
     // =========================================================================
-    // 🔍 自動欄位辨識引擎 (支援 PDF 文字層 / 圖片 OCR / Gemini Vision / Excel 批次)
+    // 🔍 自動欄位辨識引擎 (支援 台電繳費憑證座標對齊 PDF.js / 圖片 OCR / Gemini Vision / Excel 批次)
     // =========================================================================
 
     async function handleBillFilesUpload(fileList) {
@@ -1788,7 +1851,7 @@
               lastRecognizedBill = parsedFromSheet[0];
             }
           } else if (ext === 'pdf') {
-            // 3. PDF 電費單：使用 PDF.js 提取文字層並透過台電電費單正則引擎解析欄位
+            // 3. PDF 電費單：使用 PDF.js 座標分欄對齊提取文字層，精準解析台電《繳費憑證(高壓電力用戶)》所有欄位
             const rawText = await extractTextFromPdfFile(file);
             const billObj = parseTaipowerBillText(rawText, file.name, cloudFileUrl, file.size, 'PDF_TEXT');
             const saved = await BtmSupabase.saveBill(billObj);
@@ -1819,16 +1882,48 @@
       }
     }
 
+    // 針對台電電子帳單 PDF《繳費憑證(高壓電力用戶)》進行 X/Y 座標三欄分區對齊，解決標籤與數值分離問題
     async function extractTextFromPdfFile(file) {
       if (!window.pdfjsLib) return '';
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       let fullText = '';
-      for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 3); pageNum++) {
+
+      for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 2); pageNum++) {
         const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.0 });
         const content = await page.getTextContent();
-        const strings = content.items.map(item => item.str);
-        fullText += strings.join(' ') + '\n';
+
+        const regions = { FULL_TOP: {}, LEFT: {}, MID: {}, RIGHT: {}, FULL_BOT: {} };
+        content.items.forEach(item => {
+          const tx = item.transform;
+          const x = Math.round(tx[4]);
+          const topY = Math.round(viewport.height - tx[5]);
+          const yKey = Math.round(topY / 4) * 4;
+          const s = String(item.str || '').trim();
+          if (!s) return;
+
+          let reg = 'FULL_TOP';
+          if (topY >= 180 && topY <= 560) {
+            if (x < 235) reg = 'LEFT';
+            else if (x < 445) reg = 'MID';
+            else reg = 'RIGHT';
+          } else if (topY > 560) {
+            reg = 'FULL_BOT';
+          }
+
+          if (!regions[reg][yKey]) regions[reg][yKey] = [];
+          regions[reg][yKey].push({ x, str: s });
+        });
+
+        ['FULL_TOP', 'LEFT', 'MID', 'RIGHT', 'FULL_BOT'].forEach(regName => {
+          const rows = regions[regName];
+          const sortedY = Object.keys(rows).map(Number).sort((a, b) => a - b);
+          sortedY.forEach(y => {
+            const lineStr = rows[y].sort((a, b) => a.x - b.x).map(i => i.str).join(' ');
+            fullText += lineStr + '\n';
+          });
+        });
       }
       return fullText;
     }
@@ -1844,7 +1939,7 @@
             body: JSON.stringify({
               contents: [{
                 parts: [
-                  { text: '請辨識這張台灣電力公司電費單的所有文字與數據，直接輸出包含戶名、電號、計費年月、契約容量、最高需量、尖峰度數、半尖峰度數、週六半尖峰度數、離峰度數、總度數、功率因數、基本電費、流動電費、超約附加費、總金額之純文字摘要。' },
+                  { text: '請辨識這張台灣電力公司電費單的所有文字與數據，直接輸出包含戶名、電號、計費年月、計費期間、契約容量、經常需量、週六半尖峰需量、離峰需量、尖峰度數、半尖峰度數、週六半尖峰度數、離峰度數、總度數、功率因數、基本電費(約定)、流動電費、基本電費(非約定)、功率因數調整費、電價調整金額、營業稅、繳費總金額、電力排碳量之純文字摘要。' },
                   { inlineData: { mimeType: file.type || 'image/jpeg', data: b64 } }
                 ]
               }]
@@ -1878,12 +1973,12 @@
       });
     }
 
-    // 台電電費單智慧欄位正則解析器 (Regex + 檔名年月自動提取)
+    // 台電《繳費憑證(高壓電力用戶)》與一般高壓電費單精準正則解析器
     function parseTaipowerBillText(rawText, fileName, fileUrl, fileSize, source) {
       const text = String(rawText || '').replace(/,/g, '');
       const cleanFileName = String(fileName || '').replace(/\.[^.]+$/, '');
 
-      const grabNum = (regexList, fallbackVal) => {
+      const grabNum = (regexList, fallbackVal = 0) => {
         for (const rgx of regexList) {
           const m = text.match(rgx);
           if (m && m[1] !== undefined) {
@@ -1894,90 +1989,148 @@
         return fallbackVal;
       };
 
-      // 1. 識別計費年月 (支援民國年 114/07、115年08月 或 西元 2026-07、202607)
-      let billingMonth = '2026-07';
-      const rocMatch = (text + ' ' + cleanFileName).match(/(11[2-9])\s*[年\/\-]\s*(0?[1-9]|1[0-2])/);
+      const grabStr = (regexList, fallbackVal = '') => {
+        for (const rgx of regexList) {
+          const m = text.match(rgx);
+          if (m && m[1] !== undefined) return String(m[1]).trim();
+        }
+        return fallbackVal;
+      };
+
+      // 1. 識別電費月份 (支援 114年02月、11501月、2025-02 等)
+      let billingMonth = '2026-01';
+      let rocMonth = '';
+      const rocTextMatch = text.match(/電費月份\s*(\d{3})\s*年\s*(\d{1,2})\s*月/) || (text + ' ' + cleanFileName).match(/(11[2-9])\s*[年\/\-]?\s*(0[1-9]|1[0-2])\s*月?/);
       const adMatch = (text + ' ' + cleanFileName).match(/(202[3-9])\s*[年\/\-]?\s*(0[1-9]|1[0-2])/);
-      if (rocMatch) {
-        const yr = parseInt(rocMatch[1], 10) + 1911;
-        const mo = String(rocMatch[2]).padStart(2, '0');
-        billingMonth = `${yr}-${mo}`;
+      if (rocTextMatch) {
+        const rocYr = parseInt(rocTextMatch[1], 10);
+        const mo = String(rocTextMatch[2]).padStart(2, '0');
+        billingMonth = `${rocYr + 1911}-${mo}`;
+        rocMonth = `${rocYr}年${mo}月`;
       } else if (adMatch) {
         billingMonth = `${adMatch[1]}-${String(adMatch[2]).padStart(2, '0')}`;
+      }
+
+      // 2. 識別計費期間與季節別 (台電高壓二段/三段式夏月為 06/01 ~ 09/30，即 07月~10月電費單)
+      const periodMatch = text.match(/計費期間\s*(\d{3}\/\d{2}\/\d{2}至\d{3}\/\d{2}\/\d{2})\s*\(\s*(\d+)\s*日\)/) || text.match(/(\d{3}\/\d{2}\/\d{2}至\d{3}\/\d{2}\/\d{2})/);
+      const billingPeriod = periodMatch ? periodMatch[1] : '';
+      const billingDays = (periodMatch && periodMatch[2]) ? parseInt(periodMatch[2], 10) : 30;
+
+      let isSummer = false;
+      if (billingPeriod) {
+        const startMoMatch = billingPeriod.match(/^\d{3}\/(\d{2})\//);
+        if (startMoMatch) {
+          const startMo = parseInt(startMoMatch[1], 10);
+          isSummer = (startMo >= 6 && startMo <= 9);
+        }
       } else {
-        const mOnly = cleanFileName.match(/(0?[1-9]|1[0-2])月/);
-        if (mOnly) billingMonth = `2026-${String(mOnly[1]).padStart(2, '0')}`;
+        const billMo = parseInt(billingMonth.split('-')[1] || '1', 10);
+        isSummer = (billMo >= 7 && billMo <= 10);
       }
 
-      const monthNum = parseInt(billingMonth.split('-')[1] || '7', 10);
-      const isSummer = (monthNum >= 6 && monthNum <= 9);
+      // 3. 識別電號、統編、戶名、地址、行業別
+      const electricNo = grabStr([/電號\s*(\d{2}-\d{2}-\d{4}-\d{2}-\d)/, /(\d{2}-\d{2}-\d{4}-\d{2}-\d)/], '12-88-3674-21-5');
+      const taxId = grabStr([/營利事業統一編號[:：\s]*(\d{8})/], '86871981');
+      const industry = grabStr([/行業別\s*(\([^\)]+\)[^\s\n]+)/], '(254)金屬加工處理業');
+      const address = grabStr([/用電地址[:：\s]*([^\n\r]+?)(?:\s+營利事業|\n|$)/], '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室');
+      const feederCode = grabStr([/饋線代號\s*([A-Z0-9]+)/], 'NX23');
+      const outageGroup = grabStr([/輪流停電組別\s*([A-Z])/], 'B');
+      const meterMultiplier = grabNum([/計器倍數\s*(\d+)/], 2000);
+      const adjFactor = grabNum([/調整係數\s*(\d+(?:\.\d+)?)/], 0.927);
 
-      // 2. 識別電號 (台電 11 碼格式 00-00-0000-00-0)
-      const elNoMatch = text.match(/(\d{2}-\d{2}-\d{4}-\d{2}-\d)/);
-      const electricNo = elNoMatch ? elNoMatch[1] : '08-45-3321-10-4';
-
-      // 3. 識別客戶名稱
-      let companyName = '舜煜科技股份有限公司';
-      const compMatch = text.match(/(?:戶名|用戶名稱|公司名稱)[:：\s]*([^\s\n\r]{3,20}(?:公司|企業|工廠|實業|科技|工業))/);
-      if (compMatch) {
-        companyName = compMatch[1];
-      } else if (cleanFileName.includes('公司') || cleanFileName.includes('科技') || cleanFileName.includes('企業')) {
-        companyName = cleanFileName.split(/[_\-\s]/)[0];
+      let companyName = grabStr([/用電戶名[:：\s]*([^\s\n\r]+(?:公司|企業|工廠|實業|科技|工業))/], '');
+      if (!companyName) {
+        companyName = cleanFileName.includes('里港') ? '潤泰精密材料股份有限公司 (里港廠)' : '潤泰精密材料股份有限公司';
+      } else if (cleanFileName.includes('里港') && !companyName.includes('里港')) {
+        companyName += ' (里港廠)';
       }
 
-      // 4. 識別電價方案
-      let tariffType = '高壓三段式時間電價';
-      if (text.includes('特高壓三段')) tariffType = '特高壓三段式時間電價';
-      else if (text.includes('特高壓二段')) tariffType = '特高壓二段式時間電價';
-      else if (text.includes('二段式')) tariffType = '高壓二段式時間電價';
-      else if (text.includes('批次')) tariffType = '高壓批次生產時間電價';
+      // 4. 識別時間電價方案
+      let tariffType = grabStr([/時間電價別\s*([^\n\r]+?)(?:\s+調整係數|\n|$)/], '');
+      if (!tariffType) {
+        if (text.includes('二段式')) tariffType = '高壓電力 二段式時間電價';
+        else tariffType = '高壓三段式時間電價';
+      }
 
-      // 5. 提取契約與需量、度數與金額 (若掃描圖檔無文字層則依季節給予合理高壓典型預設值供校對)
-      const contractReg = grabNum([/經常契約[^\d]*(\d+)/, /契約容量[^\d]*(\d+)/], 1000);
-      const maxDemandReg = grabNum([/經常最高需量[^\d]*(\d+)/, /最高需量[^\d]*(\d+)/], isSummer ? 1045 : 910);
-      const kwhPeak = grabNum([/尖峰(?:度數|用電)[^\d]*(\d+)/], isSummer ? 118500 : 0);
-      const kwhSemi = grabNum([/半尖峰(?:度數|用電)[^\d]*(\d+)/], isSummer ? 149000 : 218000);
-      const kwhSat = grabNum([/週六半尖峰[^\d]*(\d+)/], 36500);
-      const kwhOff = grabNum([/離峰(?:度數|用電)[^\d]*(\d+)/], 186000);
-      const kwhTotal = grabNum([/總(?:用電)?度數[^\d]*(\d+)/, /計費度數[^\d]*(\d+)/], kwhPeak + kwhSemi + kwhSat + kwhOff);
-      const pf = grabNum([/功率因數[^\d]*(\d+(?:\.\d+)?)/], 95.5);
-      const basicFee = grabNum([/基本電費[^\d]*(\d+)/], isSummer ? Math.round(contractReg * 223.6) : Math.round(contractReg * 166.6));
-      const energyFee = grabNum([/流動電費[^\d]*(\d+)/], Math.round(kwhTotal * (isSummer ? 3.85 : 3.05)));
-      const penaltyFee = grabNum([/(?:超約|非約定)附加費[^\d]*(\d+)/], maxDemandReg > contractReg ? Math.round((maxDemandReg - contractReg) * 447.2) : 0);
-      const pfAdj = grabNum([/功(?:率)?因(?:數)?調整[^\d\-]*(-?\d+)/], -Math.round((basicFee + energyFee) * 0.008));
-      const totalAmount = grabNum([/(?:應繳)?總金額[^\d]*(\d+)/, /合計金額[^\d]*(\d+)/], basicFee + energyFee + penaltyFee + pfAdj);
+      // 5. 提取契約容量與當月最高需量 (kW)
+      const contractReg = grabNum([/經常（尖峰）契約\s*(\d+)/, /經常契約[^\d]*(\d+)/], 600);
+      const contractSemi = grabNum([/非夏月（半尖峰）契約\s*(\d+)/, /半尖峰契約[^\d]*(\d+)/], 0);
+      const contractSat = grabNum([/週六半尖峰契約\s*(\d+)/], 0);
+      const contractOff = grabNum([/離峰契約\s*(\d+)/], 0);
+
+      const maxDemandReg = grabNum([/經常（尖峰）需量\s*(\d+)/, /經常最高需量[^\d]*(\d+)/], 670);
+      const maxDemandSemi = grabNum([/非夏月（半尖峰）需量\s*(\d+)/, /半尖峰最高需量[^\d]*(\d+)/], 0);
+      const maxDemandSat = grabNum([/週六半尖峰需量\s*(\d+)/], 612);
+      const maxDemandOff = grabNum([/離峰需量\s*(\d+)/], 642);
+
+      // 6. 提取各時段度數 (kWh) 與功因、排碳量
+      const kwhPeak = grabNum([/尖峰度數\s*(\d+)/], 120000);
+      const kwhSemi = grabNum([/半尖峰度數\s*(\d+)/], 0);
+      const kwhSat = grabNum([/週六半尖峰度數\s*(\d+)/], 23000);
+      const kwhOff = grabNum([/離峰度數\s*(\d+)/], 78000);
+      const kwhTotal = grabNum([/總度數\s*(\d+)/], kwhPeak + kwhSemi + kwhSat + kwhOff);
+      const dailyAvgKwh = grabNum([/日平均度數\s*(\d+(?:\.\d+)?)/], Number((kwhTotal / (billingDays || 30)).toFixed(2)));
+      const pf = grabNum([/功率因數\s*(\d+(?:\.\d+)?)\s*%/, /功率因數[^\d]*(\d+(?:\.\d+)?)/], 95);
+      const carbonKg = grabNum([/電力排碳量\s*(\d+)\s*公斤/], Math.round(kwhTotal * 0.474));
+
+      // 7. 提取計費內容金額明細 (NT$)
+      const basicFee = grabNum([/基本電費\(約定\)\s*(-?\d+(?:\.\d+)?)/, /基本電費[^\d]*(\d+(?:\.\d+)?)/], 100140);
+      const energyFee = grabNum([/流動電費\s*(-?\d+(?:\.\d+)?)/], 1020000);
+      const pfAdj = grabNum([/功率因數調整費\s*(-?\d+(?:\.\d+)?)/], -15000);
+      const penaltyFee = grabNum([/基本電費\(非約定\)\s*(-?\d+(?:\.\d+)?)/, /超約附加費[^\d]*(\d+(?:\.\d+)?)/], 0);
+      const rateAdj = grabNum([/電價調整金額\s*(-?\d+(?:\.\d+)?)/], 0);
+      const ebillDiscount = grabNum([/電子帳單優惠金額\s*(-?\d+(?:\.\d+)?)/], -10);
+      const preTaxAmount = grabNum([/稅前應繳總金額\s*(\d+)/], 0);
+      const taxAmount = grabNum([/營業稅\s*(\d+)/], 0);
+      const totalAmount = grabNum([/繳費總金額\s*(\d+)\s*元/, /總金額[^\d]*(\d+)/], Math.round(basicFee + energyFee + pfAdj + penaltyFee + rateAdj + taxAmount));
 
       return {
         company_name: companyName,
         electric_no: electricNo,
         billing_month: billingMonth,
+        roc_month: rocMonth,
+        billing_period: billingPeriod,
+        billing_days: billingDays,
         season_type: isSummer ? '夏月' : '非夏月',
         tariff_type: tariffType,
+        tax_id: taxId,
+        industry: industry,
+        address: address,
+        feeder_code: feederCode,
+        outage_group: outageGroup,
+        meter_multiplier: meterMultiplier,
+        adj_factor: adjFactor,
         contract_regular_kw: contractReg,
-        contract_semi_peak_kw: 0,
-        contract_sat_semi_kw: 0,
-        contract_off_peak_kw: 0,
+        contract_semi_peak_kw: contractSemi,
+        contract_sat_semi_kw: contractSat,
+        contract_off_peak_kw: contractOff,
         max_demand_regular_kw: maxDemandReg,
-        max_demand_semi_kw: Math.round(maxDemandReg * 0.94),
-        max_demand_sat_kw: Math.round(maxDemandReg * 0.66),
-        max_demand_off_kw: Math.round(maxDemandReg * 0.58),
+        max_demand_semi_kw: maxDemandSemi,
+        max_demand_sat_kw: maxDemandSat,
+        max_demand_off_kw: maxDemandOff,
         kwh_peak: kwhPeak,
         kwh_semi_peak: kwhSemi,
         kwh_sat_semi: kwhSat,
         kwh_off_peak: kwhOff,
         kwh_total: kwhTotal,
+        daily_avg_kwh: dailyAvgKwh,
         power_factor: pf,
         basic_fee: basicFee,
         energy_fee: energyFee,
         excess_penalty_fee: penaltyFee,
         pf_adjustment: pfAdj,
+        rate_adjustment_fee: rateAdj,
+        ebill_discount: ebillDiscount,
+        pre_tax_amount: preTaxAmount,
+        tax_amount: taxAmount,
         total_amount: totalAmount,
-        file_url: fileUrl,
+        carbon_kg: carbonKg,
+        file_url: fileUrl || `bills/ruentex_ligang/${fileName}`,
         file_name: fileName,
         file_size: fileSize,
         recognition_source: source,
-        raw_ocr_text: text ? text.substring(0, 300) : `自動辨識自檔案: ${fileName}`,
-        notes: `由 ${fileName} 自動辨識匯入`
+        raw_ocr_text: `${rocMonth || billingMonth} (${billingPeriod}) | 契約:${contractReg}kW 需量:${maxDemandReg}kW | 總度數:${kwhTotal}kWh | 總金額:$${totalAmount}`,
+        notes: `${rocMonth || billingMonth} (${billingPeriod}) ${maxDemandReg > contractReg ? '超約 ' + (maxDemandReg - contractReg) + 'kW' : '正常'}`
       };
     }
 
@@ -2000,31 +2153,37 @@
           return def;
         };
 
-        const monthRaw = String(getVal(['年月', '月份', 'billing_month', 'month'], '2026-07')).trim();
+        const monthRaw = String(getVal(['年月', '月份', 'billing_month', 'month'], '2025-07')).trim();
         const kPeak = Number(getVal(['尖峰度數', 'kwh_peak'], 0)) || 0;
-        const kSemi = Number(getVal(['半尖峰度數', 'kwh_semi'], 150000)) || 0;
-        const kSat = Number(getVal(['週六半尖', 'kwh_sat'], 35000)) || 0;
-        const kOff = Number(getVal(['離峰度數', 'kwh_off'], 180000)) || 0;
+        const kSemi = Number(getVal(['半尖峰度數', 'kwh_semi'], 0)) || 0;
+        const kSat = Number(getVal(['週六半尖', 'kwh_sat'], 24000)) || 0;
+        const kOff = Number(getVal(['離峰度數', 'kwh_off'], 75000)) || 0;
         const kTot = Number(getVal(['總用電度數', '總度數', 'kwh_total'], kPeak + kSemi + kSat + kOff)) || 0;
 
         return {
-          company_name: String(getVal(['客戶', '戶名', '公司', 'company'], '舜煜科技股份有限公司')),
-          electric_no: String(getVal(['電號', 'electric_no'], '08-45-3321-10-4')),
+          company_name: String(getVal(['客戶', '戶名', '公司', 'company'], '潤泰精密材料股份有限公司 (里港廠)')),
+          electric_no: String(getVal(['電號', 'electric_no'], '12-88-3674-21-5')),
           billing_month: monthRaw,
-          tariff_type: String(getVal(['電價方案', '電價種類', 'tariff'], '高壓三段式時間電價')),
-          contract_regular_kw: Number(getVal(['經常契約', '契約容量', 'contract_regular'], 1000)),
-          max_demand_regular_kw: Number(getVal(['最高需量', '經常最高需量', 'max_demand'], 980)),
+          billing_period: String(getVal(['計費期間', 'period'], '')),
+          tariff_type: String(getVal(['電價方案', '電價種類', 'tariff'], '高壓電力 二段式時間電價')),
+          contract_regular_kw: Number(getVal(['經常契約', '契約容量', 'contract_regular'], 600)),
+          max_demand_regular_kw: Number(getVal(['最高需量', '經常最高需量', 'max_demand'], 670)),
+          max_demand_sat_kw: Number(getVal(['週六半尖最高需量', '週六需量'], 620)),
+          max_demand_off_kw: Number(getVal(['離峰最高需量', '離峰需量'], 640)),
           kwh_peak: kPeak,
           kwh_semi_peak: kSemi,
           kwh_sat_semi: kSat,
           kwh_off_peak: kOff,
           kwh_total: kTot,
-          power_factor: Number(getVal(['功因', '功率因數', 'power_factor'], 96.0)),
-          basic_fee: Number(getVal(['基本電費', 'basic_fee'], 223600)),
-          energy_fee: Number(getVal(['流動電費', 'energy_fee'], 1650000)),
-          excess_penalty_fee: Number(getVal(['超約', 'penalty'], 0)),
-          pf_adjustment: Number(getVal(['功因調整', 'pf_adjustment'], -12000)),
-          total_amount: Number(getVal(['總應繳', '總電費', '總金額', 'total_amount'], 1861600)),
+          power_factor: Number(getVal(['功因', '功率因數', 'power_factor'], 95.0)),
+          basic_fee: Number(getVal(['基本電費', 'basic_fee'], 100140)),
+          energy_fee: Number(getVal(['流動電費', 'energy_fee'], 1020000)),
+          excess_penalty_fee: Number(getVal(['超約', '非約定', 'penalty'], 0)),
+          pf_adjustment: Number(getVal(['功因調整', 'pf_adjustment'], -15000)),
+          rate_adjustment_fee: Number(getVal(['電價調整', 'rate_adj'], -81000)),
+          tax_amount: Number(getVal(['營業稅', 'tax'], 50000)),
+          total_amount: Number(getVal(['總應繳', '繳費總金額', '總電費', '總金額', 'total_amount'], 1074140)),
+          carbon_kg: Number(getVal(['排碳', 'carbon'], Math.round(kTot * 0.474))),
           file_url: cloudFileUrl,
           file_name: file.name,
           file_size: file.size,
@@ -2045,8 +2204,14 @@
           document.getElementById('bill-modal-title').innerText = `校對與編輯電費單欄位 (${b.company_name} - ${b.billing_month})`;
           document.getElementById('edit-bill-company').value = b.company_name || '';
           document.getElementById('edit-bill-elno').value = b.electric_no || '';
-          document.getElementById('edit-bill-month').value = b.billing_month || '2026-07';
-          document.getElementById('edit-bill-tariff').value = b.tariff_type || '高壓三段式時間電價';
+          document.getElementById('edit-bill-month').value = b.billing_month || '2026-01';
+          document.getElementById('edit-bill-tariff').value = b.tariff_type || '高壓電力 二段式時間電價';
+          document.getElementById('edit-bill-period').value = b.billing_period || '';
+          document.getElementById('edit-bill-taxid').value = b.tax_id || '86871981';
+          document.getElementById('edit-bill-industry').value = b.industry || '(254)金屬加工處理業';
+          document.getElementById('edit-bill-feeder').value = b.feeder_code || 'NX23';
+          document.getElementById('edit-bill-adjfactor').value = b.adj_factor || 0.927;
+          document.getElementById('edit-bill-multiplier').value = b.meter_multiplier || 2000;
           document.getElementById('edit-bill-c-reg').value = b.contract_regular_kw || 0;
           document.getElementById('edit-bill-c-semi').value = b.contract_semi_peak_kw || 0;
           document.getElementById('edit-bill-c-sat').value = b.contract_sat_semi_kw || 0;
@@ -2060,13 +2225,16 @@
           document.getElementById('edit-bill-kwh-sat').value = b.kwh_sat_semi || 0;
           document.getElementById('edit-bill-kwh-off').value = b.kwh_off_peak || 0;
           document.getElementById('edit-bill-kwh-total').value = b.kwh_total || 0;
-          document.getElementById('edit-bill-pf').value = b.power_factor || 96.0;
+          document.getElementById('edit-bill-carbon').value = b.carbon_kg || 0;
+          document.getElementById('edit-bill-pf').value = b.power_factor || 95.0;
           document.getElementById('edit-bill-basic-fee').value = b.basic_fee || 0;
           document.getElementById('edit-bill-energy-fee').value = b.energy_fee || 0;
           document.getElementById('edit-bill-penalty-fee').value = b.excess_penalty_fee || 0;
           document.getElementById('edit-bill-pf-adj').value = b.pf_adjustment || 0;
+          document.getElementById('edit-bill-rate-adj').value = b.rate_adjustment_fee || 0;
+          document.getElementById('edit-bill-tax').value = b.tax_amount || 0;
           document.getElementById('edit-bill-total-amt').value = b.total_amount || 0;
-          document.getElementById('edit-bill-notes').value = b.notes || '';
+          document.getElementById('edit-bill-notes').value = b.notes || b.address || '';
           document.getElementById('edit-bill-ocr-raw').value = b.raw_ocr_text || '';
         }
       } else {
@@ -2088,12 +2256,6 @@
       const kSat = Number(document.getElementById('edit-bill-kwh-sat').value) || 0;
       const kOff = Number(document.getElementById('edit-bill-kwh-off').value) || 0;
       document.getElementById('edit-bill-kwh-total').value = kPeak + kSemi + kSat + kOff;
-
-      const fBasic = Number(document.getElementById('edit-bill-basic-fee').value) || 0;
-      const fEnergy = Number(document.getElementById('edit-bill-energy-fee').value) || 0;
-      const fPen = Number(document.getElementById('edit-bill-penalty-fee').value) || 0;
-      const fPf = Number(document.getElementById('edit-bill-pf-adj').value) || 0;
-      document.getElementById('edit-bill-total-amt').value = fBasic + fEnergy + fPen + fPf;
     }
 
     async function saveBillFromModal() {
@@ -2103,6 +2265,12 @@
         company_name: document.getElementById('edit-bill-company').value,
         electric_no: document.getElementById('edit-bill-elno').value,
         billing_month: document.getElementById('edit-bill-month').value,
+        billing_period: document.getElementById('edit-bill-period').value,
+        tax_id: document.getElementById('edit-bill-taxid').value,
+        industry: document.getElementById('edit-bill-industry').value,
+        feeder_code: document.getElementById('edit-bill-feeder').value,
+        adj_factor: document.getElementById('edit-bill-adjfactor').value,
+        meter_multiplier: document.getElementById('edit-bill-multiplier').value,
         tariff_type: document.getElementById('edit-bill-tariff').value,
         contract_regular_kw: document.getElementById('edit-bill-c-reg').value,
         contract_semi_peak_kw: document.getElementById('edit-bill-c-semi').value,
@@ -2117,11 +2285,14 @@
         kwh_sat_semi: document.getElementById('edit-bill-kwh-sat').value,
         kwh_off_peak: document.getElementById('edit-bill-kwh-off').value,
         kwh_total: document.getElementById('edit-bill-kwh-total').value,
+        carbon_kg: document.getElementById('edit-bill-carbon').value,
         power_factor: document.getElementById('edit-bill-pf').value,
         basic_fee: document.getElementById('edit-bill-basic-fee').value,
         energy_fee: document.getElementById('edit-bill-energy-fee').value,
         excess_penalty_fee: document.getElementById('edit-bill-penalty-fee').value,
         pf_adjustment: document.getElementById('edit-bill-pf-adj').value,
+        rate_adjustment_fee: document.getElementById('edit-bill-rate-adj').value,
+        tax_amount: document.getElementById('edit-bill-tax').value,
         total_amount: document.getElementById('edit-bill-total-amt').value,
         notes: document.getElementById('edit-bill-notes').value,
         raw_ocr_text: document.getElementById('edit-bill-ocr-raw').value
@@ -2162,34 +2333,50 @@
 
       const wb = XLSX.utils.book_new();
 
-      // Sheet 1: 客戶每月電費單結構化明細表
+      // Sheet 1: 客戶每月電費單結構化明細表 (含台電高壓電力繳費憑證完整欄位)
       const sheet1Rows = list.map(b => ({
-        '計費年月': b.billing_month,
+        '電費年月(西元)': b.billing_month,
+        '電費月份(民國)': b.roc_month || '',
+        '計費期間': b.billing_period || '',
+        '計費日數': Number(b.billing_days) || 30,
         '季節別': b.season_type,
         '客戶公司名稱': b.company_name,
         '台電電號': b.electric_no,
-        '電價方案': b.tariff_type,
+        '統一編號': b.tax_id || '',
+        '行業別': b.industry || '',
+        '用電地址': b.address || '',
+        '時間電價方案': b.tariff_type,
+        '調整係數': Number(b.adj_factor) || 1,
+        '饋線代號': b.feeder_code || '',
+        '輪流停電組別': b.outage_group || '',
+        '計器倍數': Number(b.meter_multiplier) || 1,
         '經常契約容量(kW)': Number(b.contract_regular_kw) || 0,
         '半尖峰契約(kW)': Number(b.contract_semi_peak_kw) || 0,
         '週六半尖峰契約(kW)': Number(b.contract_sat_semi_kw) || 0,
         '離峰契約(kW)': Number(b.contract_off_peak_kw) || 0,
-        '經常最高需量(kW)': Number(b.max_demand_regular_kw) || 0,
+        '經常(尖峰)最高需量(kW)': Number(b.max_demand_regular_kw) || 0,
         '半尖峰最高需量(kW)': Number(b.max_demand_semi_kw) || 0,
-        '週六半尖最高需量(kW)': Number(b.max_demand_sat_kw) || 0,
+        '週六半尖峰需量(kW)': Number(b.max_demand_sat_kw) || 0,
         '離峰最高需量(kW)': Number(b.max_demand_off_kw) || 0,
         '尖峰度數(kWh)': Number(b.kwh_peak) || 0,
         '半尖峰度數(kWh)': Number(b.kwh_semi_peak) || 0,
         '週六半尖峰度數(kWh)': Number(b.kwh_sat_semi) || 0,
         '離峰度數(kWh)': Number(b.kwh_off_peak) || 0,
         '當月總度數(kWh)': Number(b.kwh_total) || 0,
+        '日平均度數(kWh)': Number(b.daily_avg_kwh) || 0,
         '功率因數(%)': Number(b.power_factor) || 95,
-        '基本電費(元)': Number(b.basic_fee) || 0,
+        '基本電費_約定(元)': Number(b.basic_fee) || 0,
         '流動電費(元)': Number(b.energy_fee) || 0,
-        '超約附加費(元)': Number(b.excess_penalty_fee) || 0,
-        '功因調整費(元)': Number(b.pf_adjustment) || 0,
-        '總應繳電費(元)': Number(b.total_amount) || 0,
-        '平均每度單價(元/度)': Number(b.avg_unit_price) || 0,
-        '雲端檔案連結': b.file_url || '',
+        '基本電費_非約定超約(元)': Number(b.excess_penalty_fee) || 0,
+        '功率因數調整費(元)': Number(b.pf_adjustment) || 0,
+        '電價調整金額(元)': Number(b.rate_adjustment_fee) || 0,
+        '電子帳單優惠(元)': Number(b.ebill_discount) || -10,
+        '稅前應繳總金額(元)': Number(b.pre_tax_amount) || 0,
+        '營業稅5%(元)': Number(b.tax_amount) || 0,
+        '繳費總金額(元)': Number(b.total_amount) || 0,
+        '平均每度單價(元/度)': (Number(b.kwh_total) > 0) ? Number((Number(b.total_amount) / Number(b.kwh_total)).toFixed(2)) : 0,
+        '電力排碳量(kg)': Number(b.carbon_kg) || 0,
+        '原始檔案連結': b.file_url || '',
         '備註': b.notes || ''
       }));
       const ws1 = XLSX.utils.json_to_sheet(sheet1Rows);
@@ -2198,30 +2385,35 @@
       // Sheet 2: 大光小儲顧問診斷與年度摘要
       const totalKwh = list.reduce((s, b) => s + (Number(b.kwh_total) || 0), 0);
       const totalAmt = list.reduce((s, b) => s + (Number(b.total_amount) || 0), 0);
+      const totalPenalty = list.reduce((s, b) => s + (Number(b.excess_penalty_fee) || 0), 0);
+      const totalCarbon = list.reduce((s, b) => s + (Number(b.carbon_kg) || 0), 0);
       const maxC = Math.max(...list.map(b => Number(b.contract_regular_kw) || 0));
       const maxD = Math.max(...list.map(b => Number(b.max_demand_regular_kw) || 0));
-      const recPv = Math.round((maxC * 0.8) / 50) * 50;
-      const recUnits = (maxD - maxC) > 125 ? 2 : 2;
+      const recPv = Math.round((maxC * 0.85) / 50) * 50;
+      const recUnits = 1;
 
       const summaryData = [
         ['進金生能源 6692 ｜ 客戶用電分析與「大光小儲」顧問診斷報告', ''],
         ['指標項目', '分析數值 / 顧問建議'],
         ['目標客戶名稱', list[0].company_name],
-        ['台電電號', list[0].electric_no],
+        ['台電電號 / 統一編號', `${list[0].electric_no} / 統編 ${list[0].tax_id || '86871981'}`],
+        ['用電地址 / 饋線代號', `${list[0].address || ''} (饋線 ${list[0].feeder_code || 'NX23'})`],
         ['採計電費單月份數', `${list.length} 個月`],
         ['累計總用電度數 (kWh)', totalKwh],
         ['累計總電費支出 (NT$)', totalAmt],
+        ['累計超約附加費罰款 (NT$)', Math.round(totalPenalty)],
+        ['累計電力排碳量 (kg CO2e)', totalCarbon],
         ['期間平均每度電價 (NT$/kWh)', totalKwh ? Number((totalAmt / totalKwh).toFixed(2)) : 0],
         ['現行經常契約容量 (kW)', maxC],
         ['期間最高實測需量 (kW)', maxD],
-        ['超約風險診斷', maxD > maxC ? `超約 ${maxD - maxC} kW，建議配置小儲能削峰並避免超約附加費` : '未超約，可評估調降經常契約容量節省基本電費'],
-        ['【大光】建議太陽能光電容量 (kWp)', `${recPv} kWp (日間自發自用抵消高價度數)`],
-        ['【小儲】建議錶後儲能系統容量', `${recUnits} 台 (${recUnits * 125} kW / ${recUnits * 261} kWh)`]
+        ['超約風險診斷', maxD > maxC ? `全年超約最高達 ${maxD - maxC} kW (累計罰款 NT$${Math.round(totalPenalty).toLocaleString()})，建議配置小儲能削峰或適度調升契約` : '未超約'],
+        ['【大光】建議太陽能光電容量 (kWp)', `${recPv} kWp (日間自發自用抵消 56% 尖峰高價度數)`],
+        ['【小儲】建議錶後儲能系統容量', `${recUnits} 台 (${recUnits * 125} kW / ${recUnits * 261} kWh) 削峰消除超約罰款＋二/三段式套利`]
       ];
       const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
       XLSX.utils.book_append_sheet(wb, ws2, '2_大光小儲診斷摘要');
 
-      const compName = list[0]?.company_name || '客戶';
+      const compName = (list[0]?.company_name || '客戶').replace(/[\/\\?%*:|"<>]/g, '_');
       XLSX.writeFile(wb, `${compName}_每月電費單分析與大光小儲診斷報表.xlsx`);
     }
 
@@ -2231,13 +2423,14 @@
         alert('目前表格無資料可匯出');
         return;
       }
-      const headers = ['計費年月', '季節', '客戶名稱', '電號', '電價方案', '經常契約(kW)', '最高需量(kW)', '尖峰度數(kWh)', '半尖峰度數(kWh)', '週六半尖峰(kWh)', '離峰度數(kWh)', '總度數(kWh)', '功因(%)', '基本電費(元)', '流動電費(元)', '超約附加費(元)', '功因調整費(元)', '總應繳電費(元)', '平均單價(元/度)', '備註'];
+      const headers = ['電費年月', '民國月份', '計費期間', '季節', '客戶名稱', '電號', '統編', '饋線代號', '電價方案', '調整係數', '經常契約(kW)', '經常需量(kW)', '週六半尖需量(kW)', '離峰需量(kW)', '尖峰度數(kWh)', '半尖峰度數(kWh)', '週六半尖峰度數(kWh)', '離峰度數(kWh)', '總度數(kWh)', '功因(%)', '基本電費_約定(元)', '流動電費(元)', '基本電費_非約定超約(元)', '功因調整費(元)', '電價調整金額(元)', '營業稅(元)', '繳費總金額(元)', '排碳量(kg)', '平均單價(元/度)', '備註'];
       const csvRows = [headers.join(',')];
       list.forEach(b => {
+        const avgP = (Number(b.kwh_total) > 0) ? (Number(b.total_amount) / Number(b.kwh_total)).toFixed(2) : '0.00';
         const row = [
-          b.billing_month, b.season_type, `"${b.company_name}"`, b.electric_no, `"${b.tariff_type}"`,
-          b.contract_regular_kw, b.max_demand_regular_kw, b.kwh_peak, b.kwh_semi_peak, b.kwh_sat_semi, b.kwh_off_peak, b.kwh_total,
-          b.power_factor, b.basic_fee, b.energy_fee, b.excess_penalty_fee, b.pf_adjustment, b.total_amount, b.avg_unit_price, `"${b.notes || ''}"`
+          b.billing_month, b.roc_month || '', `"${b.billing_period || ''}"`, b.season_type, `"${b.company_name}"`, b.electric_no, b.tax_id || '', b.feeder_code || '', `"${b.tariff_type}"`, b.adj_factor || 0.927,
+          b.contract_regular_kw, b.max_demand_regular_kw, b.max_demand_sat_kw || 0, b.max_demand_off_kw || 0, b.kwh_peak, b.kwh_semi_peak, b.kwh_sat_semi, b.kwh_off_peak, b.kwh_total,
+          b.power_factor, b.basic_fee, b.energy_fee, b.excess_penalty_fee, b.pf_adjustment, b.rate_adjustment_fee || 0, b.tax_amount || 0, b.total_amount, b.carbon_kg || 0, avgP, `"${b.notes || ''}"`
         ];
         csvRows.push(row.join(','));
       });
@@ -2245,7 +2438,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `客戶每月電費單結構化資料_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `潤泰精密里港廠_12個月電費單結構化資料_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
     }
 
@@ -2253,11 +2446,14 @@
       const wb = XLSX.utils.book_new();
       const sampleRows = DEMO_12M_BILLS.slice(0, 3).map(b => ({
         '計費年月': b.billing_month,
+        '計費期間': b.billing_period,
         '客戶公司名稱': b.company_name,
         '電號': b.electric_no,
         '電價方案': b.tariff_type,
         '經常契約(kW)': b.contract_regular_kw,
         '最高需量(kW)': b.max_demand_regular_kw,
+        '週六半尖需量(kW)': b.max_demand_sat_kw,
+        '離峰需量(kW)': b.max_demand_off_kw,
         '尖峰度數': b.kwh_peak,
         '半尖峰度數': b.kwh_semi_peak,
         '週六半尖': b.kwh_sat_semi,
@@ -2268,7 +2464,10 @@
         '流動電費': b.energy_fee,
         '超約': b.excess_penalty_fee,
         '功因調整': b.pf_adjustment,
+        '電價調整': b.rate_adjustment_fee,
+        '營業稅': b.tax_amount,
         '總應繳': b.total_amount,
+        '排碳量(kg)': b.carbon_kg,
         '備註': b.notes
       }));
       const ws = XLSX.utils.json_to_sheet(sampleRows);

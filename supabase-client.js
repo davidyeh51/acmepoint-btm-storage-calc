@@ -9,7 +9,6 @@ const BtmSupabase = {
   isOnline: false,
   currentUser: null,
 
-  // 1. 初始化與讀取憑證 (支援 URL 參數 #sb_url=...&sb_key=... 自動配對)
   getStoredConfig() {
     try {
       const rawHash = window.location.hash.replace(/^#/, '');
@@ -48,7 +47,6 @@ const BtmSupabase = {
         this.isOnline = true;
         console.log("🟢 Supabase client initialized:", cfg.url);
         
-        // 檢查登入狀態
         const { data } = await this.client.auth.getUser();
         this.currentUser = data ? data.user : null;
 
@@ -110,38 +108,8 @@ const BtmSupabase = {
     }
   },
 
-  // ==========================================================================
-  // 2. Auth 身分驗證 (選用，供業務團隊帳號登入)
-  // ==========================================================================
-  async signIn(email, password) {
-    if (!this.client) throw new Error('請先設定 Supabase 連線資訊');
-    const { data, error } = await this.client.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    this.currentUser = data.user;
-    this.updateStatusBadge();
-    return data;
-  },
-
-  async signUp(email, password) {
-    if (!this.client) throw new Error('請先設定 Supabase 連線資訊');
-    const { data, error } = await this.client.auth.signUp({ email, password });
-    if (error) throw error;
-    return data;
-  },
-
-  async signOut() {
-    if (!this.client) return;
-    await this.client.auth.signOut();
-    this.currentUser = null;
-    this.updateStatusBadge();
-  },
-
-  // ==========================================================================
-  // 3. 上傳原始電費單 (PDF / JPG / PNG / CSV / XLSX) 至 Supabase Storage
-  // ==========================================================================
   async uploadFile(fileOrBlob, customFilename = '', folder = 'bills') {
     if (!this.isConfigured() || !this.client) {
-      console.warn("未連線 Supabase，檔案以本機 ObjectURL 暫存");
       return null;
     }
 
@@ -175,9 +143,7 @@ const BtmSupabase = {
     }
   },
 
-  // ==========================================================================
-  // 4. 客戶每月電費單 (electricity_bills) 完整 CRUD 與雲端同步
-  // ==========================================================================
+  // 客戶每月電費單 (electricity_bills) 標準化欄位封裝
   normalizeBillPayload(b) {
     const kwhPeak = Number(b.kwh_peak) || 0;
     const kwhSemi = Number(b.kwh_semi_peak) || 0;
@@ -186,19 +152,26 @@ const BtmSupabase = {
     const kwhTotal = Number(b.kwh_total) || (kwhPeak + kwhSemi + kwhSat + kwhOff);
     const totalAmt = Number(b.total_amount) || 0;
     const avgPrice = kwhTotal > 0 ? Number((totalAmt / kwhTotal).toFixed(2)) : (Number(b.avg_unit_price) || 0);
+    const bDays = Number(b.billing_days) || 30;
+    const dailyAvg = Number(b.daily_avg_kwh) || (kwhTotal > 0 ? Number((kwhTotal / bDays).toFixed(2)) : 0);
 
-    // 自動判斷夏月 (06~09月) 與非夏月
-    const monthStr = String(b.billing_month || '2026-07').trim();
+    const monthStr = String(b.billing_month || '2025-07').trim();
     const mMatch = monthStr.match(/-(\d{2})$/);
     const mNum = mMatch ? parseInt(mMatch[1], 10) : 7;
     const defaultSeason = (mNum >= 6 && mNum <= 9) ? '夏月' : '非夏月';
 
     return {
-      company_name: (b.company_name || '未命名客戶').trim(),
-      electric_no: (b.electric_no || '08-45-3321-10-4').trim(),
+      company_name: (b.company_name || '潤泰精密材料股份有限公司 (里港廠)').trim(),
+      electric_no: (b.electric_no || '12-88-3674-21-5').trim(),
+      tax_id: (b.tax_id || '86871981').trim(),
+      industry: (b.industry || '(254)金屬加工處理業').trim(),
+      address: (b.address || '屏東縣里港鄉三廍村中南1-8號1~7樓及地下室').trim(),
       billing_month: monthStr,
+      roc_month: b.roc_month || '',
+      billing_period: b.billing_period || '',
+      billing_days: bDays,
       season_type: b.season_type || defaultSeason,
-      tariff_type: b.tariff_type || '高壓三段式時間電價',
+      tariff_type: b.tariff_type || '高壓電力 二段式時間電價',
       contract_regular_kw: Number(b.contract_regular_kw) || 0,
       contract_semi_peak_kw: Number(b.contract_semi_peak_kw) || 0,
       contract_sat_semi_kw: Number(b.contract_sat_semi_kw) || 0,
@@ -212,17 +185,27 @@ const BtmSupabase = {
       kwh_sat_semi: kwhSat,
       kwh_off_peak: kwhOff,
       kwh_total: kwhTotal,
+      daily_avg_kwh: dailyAvg,
       power_factor: Number(b.power_factor) || 95.0,
+      adj_factor: Number(b.adj_factor) || 0.927,
       basic_fee: Number(b.basic_fee) || 0,
       energy_fee: Number(b.energy_fee) || 0,
-      excess_penalty_fee: Number(b.excess_penalty_fee) || 0,
       pf_adjustment: Number(b.pf_adjustment) || 0,
+      excess_penalty_fee: Number(b.excess_penalty_fee) || 0,
+      rate_adjustment_fee: Number(b.rate_adjustment_fee) || 0,
+      ebill_discount: b.ebill_discount !== undefined ? Number(b.ebill_discount) : -10,
+      pre_tax_amount: Number(b.pre_tax_amount) || 0,
+      tax_amount: Number(b.tax_amount) || 0,
       total_amount: totalAmt,
       avg_unit_price: avgPrice,
+      carbon_kg: Number(b.carbon_kg) || 0,
+      feeder_code: b.feeder_code || 'NX23',
+      outage_group: b.outage_group || 'B',
+      meter_multiplier: Number(b.meter_multiplier) || 2000,
       file_url: b.file_url || null,
       file_name: b.file_name || null,
       file_size: b.file_size ? Number(b.file_size) : null,
-      recognition_source: b.recognition_source || 'AUTO_OCR',
+      recognition_source: b.recognition_source || 'AUTO_PDF',
       raw_ocr_text: b.raw_ocr_text || '',
       notes: b.notes || '',
       created_by: b.created_by || (this.currentUser ? this.currentUser.email : '進金生業務團隊'),
@@ -233,7 +216,6 @@ const BtmSupabase = {
   async saveBill(billData) {
     const payload = this.normalizeBillPayload(billData);
 
-    // 1. 先寫入 LocalStorage 確保零遺失
     const localBills = JSON.parse(localStorage.getItem('BTM_ELECTRICITY_BILLS') || '[]');
     const localItem = {
       id: billData.id && !String(billData.id).startsWith('local_') ? billData.id : ('local_bill_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
@@ -241,7 +223,6 @@ const BtmSupabase = {
       ...payload
     };
 
-    // 若同客戶 + 同電號 + 同月份已存在於 local，則更新之
     const existIdx = localBills.findIndex(item => 
       (billData.id && item.id === billData.id) || 
       (item.company_name === payload.company_name && item.billing_month === payload.billing_month && item.electric_no === payload.electric_no)
@@ -253,7 +234,6 @@ const BtmSupabase = {
     }
     localStorage.setItem('BTM_ELECTRICITY_BILLS', JSON.stringify(localBills.slice(0, 500)));
 
-    // 2. 同步寫入 Supabase 雲端資料庫
     if (this.isConfigured() && this.client) {
       try {
         if (billData.id && !String(billData.id).startsWith('local_')) {
@@ -270,7 +250,6 @@ const BtmSupabase = {
             .insert([payload])
             .select();
           if (error) throw error;
-          // 更新本地 ID 為雲端 UUID
           if (data && data[0]) {
             const updatedLocal = JSON.parse(localStorage.getItem('BTM_ELECTRICITY_BILLS') || '[]');
             const idx = updatedLocal.findIndex(x => x.id === localItem.id);
@@ -293,8 +272,10 @@ const BtmSupabase = {
   async saveBillsBatch(billsArray) {
     const normalizedList = billsArray.map(b => this.normalizeBillPayload(b));
 
-    // 本地批次儲存
-    const localBills = JSON.parse(localStorage.getItem('BTM_ELECTRICITY_BILLS') || '[]');
+    let localBills = JSON.parse(localStorage.getItem('BTM_ELECTRICITY_BILLS') || '[]');
+    // 清除舊版示範客戶，確保以真實客戶為主
+    localBills = localBills.filter(x => x.company_name !== '舜煜科技股份有限公司');
+
     normalizedList.forEach(payload => {
       const idx = localBills.findIndex(x => x.company_name === payload.company_name && x.billing_month === payload.billing_month && x.electric_no === payload.electric_no);
       if (idx >= 0) {
@@ -310,7 +291,6 @@ const BtmSupabase = {
     localBills.sort((a, b) => (b.billing_month || '').localeCompare(a.billing_month || ''));
     localStorage.setItem('BTM_ELECTRICITY_BILLS', JSON.stringify(localBills.slice(0, 500)));
 
-    // 雲端批次寫入
     if (this.isConfigured() && this.client) {
       try {
         const { data, error } = await this.client
@@ -345,10 +325,11 @@ const BtmSupabase = {
       }
     }
 
-    const localBills = JSON.parse(localStorage.getItem('BTM_ELECTRICITY_BILLS') || '[]');
+    let localBills = JSON.parse(localStorage.getItem('BTM_ELECTRICITY_BILLS') || '[]');
+    // 移除舊版虛擬範例
+    localBills = localBills.filter(x => x.company_name !== '舜煜科技股份有限公司');
 
     if (cloudBills.length > 0) {
-      // 合併尚未同步至雲端的 local_ 帳單
       const unsyncedLocals = localBills.filter(lb => 
         String(lb.id).startsWith('local_') &&
         !cloudBills.some(cb => cb.company_name === lb.company_name && cb.billing_month === lb.billing_month && cb.electric_no === lb.electric_no)
@@ -388,25 +369,21 @@ const BtmSupabase = {
     const { data, error } = await this.client.from('electricity_bills').insert(payloads).select();
     if (error) throw error;
 
-    // 清除已上傳的 local 標記紀錄，改存雲端回傳
     const remaining = localBills.filter(b => !String(b.id).startsWith('local_'));
     localStorage.setItem('BTM_ELECTRICITY_BILLS', JSON.stringify([...(data || []), ...remaining]));
     return { synced: (data || []).length };
   },
 
-  // ==========================================================================
-  // 5. 大光小儲試算提案 (btm_proposals) CRUD
-  // ==========================================================================
   async saveProposal(proposalData) {
     const payload = {
-      company_name: proposalData.company_name || '未命名企業',
+      company_name: proposalData.company_name || '潤泰精密材料股份有限公司 (里港廠)',
       contact_name: proposalData.contact_name || '',
       contact_email: proposalData.contact_email || '',
-      industry: proposalData.industry || '預設',
-      tariff: proposalData.tariff || '高壓三段式電價',
-      contract_kw: Number(proposalData.contract_kw) || 1000,
+      industry: proposalData.industry || '(254)金屬加工處理業',
+      tariff: proposalData.tariff || '高壓二段式電價',
+      contract_kw: Number(proposalData.contract_kw) || 600,
       new_contract_kw: Number(proposalData.new_contract_kw) || null,
-      pv_capacity_kwp: Number(proposalData.pv_capacity_kwp) || 800,
+      pv_capacity_kwp: Number(proposalData.pv_capacity_kwp) || 500,
       selected_units: Number(proposalData.selected_units) || 1,
       selected_strategy: proposalData.selected_strategy || '電價套利-日選2h-即時聚合',
       irr: Number(proposalData.irr) || null,
@@ -441,7 +418,6 @@ const BtmSupabase = {
           .select();
 
         if (error) {
-          console.error("Supabase insert proposal error:", error);
           return { success: true, cloud: false, local: true, data: localItem, error: error.message };
         }
         return { success: true, cloud: true, local: true, data: data[0] };
@@ -492,7 +468,6 @@ const BtmSupabase = {
     return true;
   },
 
-  // 6. 產生一鍵分享連結 (讓業務團隊免輸入金鑰直接連線使用)
   generateShareUrl() {
     const cfg = this.getStoredConfig();
     const base = window.location.origin + window.location.pathname;
@@ -500,7 +475,6 @@ const BtmSupabase = {
     return `${base}#sb_url=${encodeURIComponent(cfg.url)}&sb_key=${encodeURIComponent(cfg.anonKey)}`;
   },
 
-  // 7. 更新頂部狀態指示徽章 (McKinsey Navy/Royal Blue 風格)
   updateStatusBadge() {
     const badge = document.getElementById('supabase-status-badge');
     const label = document.getElementById('supabase-status-label');
